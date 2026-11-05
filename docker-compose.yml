@@ -12,14 +12,14 @@ services:
       - .env
     environment:
       PORT: ${PORT:-8000}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
-      SESSION_SECRET: ${SESSION_SECRET:-change_this_secret}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-your_admin_password}
+      SESSION_SECRET: ${SESSION_SECRET:-your_session_secret}
       MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017/mahashree_namkeen}
       MONGODB_DB: ${MONGODB_DB:-mahashree_namkeen}
       MYSQL_HOST: ${MYSQL_HOST:-mysql}
       MYSQL_PORT: ${MYSQL_PORT:-3306}
       MYSQL_USER: ${MYSQL_USER:-root}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root123}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-your_mysql_password}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-mahashree_namkeen}
     depends_on:
       - mongo
@@ -46,8 +46,8 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: root123
-      MYSQL_DATABASE: mahashree_namkeen
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-your_mysql_root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-mahashree_namkeen}
     volumes:
       - mysql_data:/var/lib/mysql
 

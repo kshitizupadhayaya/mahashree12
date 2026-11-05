@@ -88,8 +88,8 @@ The app uses variables such as:
 
 ```env
 PORT=8000
-ADMIN_PASSWORD=admin123
-SESSION_SECRET=change_this_secret
+ADMIN_PASSWORD=your_admin_password
+SESSION_SECRET=your_session_secret
 
 MONGODB_URI=mongodb://mongo:27017/mahashree_namkeen
 MONGODB_DB=mahashree_namkeen
@@ -97,7 +97,7 @@ MONGODB_DB=mahashree_namkeen
 MYSQL_HOST=mysql
 MYSQL_PORT=3306
 MYSQL_USER=root
-MYSQL_PASSWORD=root123
+MYSQL_PASSWORD=your_mysql_password
 MYSQL_DATABASE=mahashree_namkeen
 ```
 
@@ -119,7 +119,7 @@ To push this project to GitHub:
 git add .
 git commit -m "Initial project upload"
 git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+git remote set-url origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
 git push -u origin main
 ```
 
