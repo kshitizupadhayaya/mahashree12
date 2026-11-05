@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Mahashree Namkeen offers premium namkeen, snack mixes, and savory food products with trusted Nepali taste." />
+    <title>Mahashree Namkeen | Premium Snacks & Spice Mixes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="#top" aria-label="Mahashree Namkeen home">
+          <span class="brand-mark">M</span>
+          <div>
+            <strong>Mahashree</strong>
+            <small>Namkeen</small>
+          </div>
+        </a>
+
+        <nav class="main-nav" aria-label="Main navigation">
+          <a href="#about">About</a>
+          <a href="#products">Products</a>
+          <a href="#features">Why Us</a>
+          <a href="#testimonials">Reviews</a>
+          <a href="#contact">Contact</a>
+        </nav>
+
+        <div class="nav-actions">
+          <a class="btn btn-outline" href="#products">Explore Menu</a>
+          <button class="btn btn-primary cart-trigger" type="button">Cart <span id="cart-count">0</span></button>
+        </div>
+
+        <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">Authentic Nepali flavor • Since 2074</p>
+            <h1>Himal Pahad, Tarai, Koi Chha Nerae, Nepali Man ko Nepali Swad</h1>
+            <p class="lead">
+              Crafted for every snack moment, Mahashree Namkeen brings together tradition,
+              quality ingredients, and bold taste in every pack.
+            </p>
+
+            <div class="hero-buttons">
+              <a class="btn btn-primary" href="#products">Shop Bestsellers</a>
+              <a class="btn btn-secondary" href="#about">Our Story</a>
+            </div>
+
+            <ul class="hero-points" aria-label="Key benefits">
+              <li>Fresh ingredients</li>
+              <li>Premium packaging</li>
+              <li>Affordable value</li>
+            </ul>
+          </div>
+
+          <div class="hero-visual" aria-label="Snack product showcase">
+            <div class="product-badge">Best seller</div>
+            <div class="pack-card pack-main">
+              <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=900&q=80" alt="Snack product arrangement" />
+            </div>
+            <div class="floating-card card-one">
+              <span>Fresh</span>
+              <strong>Daily made</strong>
+            </div>
+            <div class="floating-card card-two">
+              <span>Popular</span>
+              <strong>Phurandana Mix</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats-bar">
+        <div class="container stats-grid">
+          <div>
+            <strong>2074</strong>
+            <span>Founded</span>
+          </div>
+          <div>
+            <strong>15+</strong>
+            <span>Signature products</span>
+          </div>
+          <div>
+            <strong>100%</strong>
+            <span>Flavor-first recipes</span>
+          </div>
+          <div>
+            <strong>24/7</strong>
+            <span>Customer support</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="about" class="section about">
+        <div class="container about-grid">
+          <div class="about-image">
+            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80" alt="Maha Spice & Food Products team and food preparation" />
+          </div>
+
+          <div class="about-copy">
+            <p class="section-tag">About us</p>
+            <h2>Quality snacks with a home-grown taste.</h2>
+            <p>
+              Maha Spice and Food Products is a growing FMCG brand focused on snacks,
+              namkeen, and savory products. Founded in 2074 by Mr. Madan Raj Neupane,
+              the company began with a simple promise: deliver balanced flavor without
+              compromising health and quality.
+            </p>
+            <p>
+              Every recipe is carefully selected and crafted to preserve authentic taste,
+              freshness, and consistency. From crunchy namkeen to rich mixes and savory
+              bites, each product is designed to delight families across Nepal.
+            </p>
+
+            <div class="check-list">
+              <span>✓ Carefully sourced ingredients</span>
+              <span>✓ Taste-focused production</span>
+              <span>✓ Reliable household packaging</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="products" class="section products">
+        <div class="container">
+          <div class="section-head">
+            <p class="section-tag">Our products</p>
+            <h2>Snacks that satisfy every craving.</h2>
+          </div>
+
+          <div class="filter-bar" aria-label="Product categories">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="best-seller">Best Sellers</button>
+            <button class="filter-btn" data-filter="savory">Savory Mixes</button>
+            <button class="filter-btn" data-filter="nuts">Nuts & Snacks</button>
+          </div>
+
+          <div class="product-grid">
+            <article class="product-card" data-category="best-seller savory" data-name="Phurandana & Majedar Mix" data-price="225">
+              <div class="product-image">
+                <img src="https://images.unsplash.com/photo-1604908553252-8d5d7f8e34f0?auto=format&fit=crop&w=800&q=80" alt="Phurandana mix" />
+              </div>
+              <div class="product-body">
+                <span class="pill">Best seller</span>
+                <h3>Phurandana & Majedar Mix</h3>
+                <p>Selected chewra, puffed grains, lentils, peanuts, and a rich spice blend.</p>
+                <div class="product-meta">
+                  <strong>NPR 225</strong>
+                  <button class="add-cart" type="button">Add to cart</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="product-card" data-category="savory" data-name="Majedar Mix" data-price="175">
+              <div class="product-image">
+                <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80" alt="Majedar mix" />
+              </div>
+              <div class="product-body">
+                <span class="pill">Popular</span>
+                <h3>Majedar Mix</h3>
+                <p>Classic savory crunch with roasted ingredients and handpicked spice notes.</p>
+                <div class="product-meta">
+                  <strong>NPR 175</strong>
+                  <button class="add-cart" type="button">Add to cart</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="product-card" data-category="nuts" data-name="Salted Peanut" data-price="200">
+              <div class="product-image">
+                <img src="https://images.unsplash.com/photo-1471193945509-9ad0617afabf?auto=format&fit=crop&w=800&q=80" alt="Salted peanut" />
+              </div>
+              <div class="product-body">
+                <span class="pill">Crunchy</span>
+                <h3>Salted Peanut</h3>
+                <p>Roasted peanuts with balanced seasoning and a satisfying savory finish.</p>
+                <div class="product-meta">
+                  <strong>NPR 200</strong>
+                  <button class="add-cart" type="button">Add to cart</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="product-card" data-category="savory" data-name="Navratan Mix" data-price="120">
+              <div class="product-image">
+                <img src="https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80" alt="Navratan mix" />
+              </div>
+              <div class="product-body">
+                <span class="pill">Signature</span>
+                <h3>Navratan Mix</h3>
+                <p>A festive combination of gram flour, lentils, nuts, raisins, and warming spices.</p>
+                <div class="product-meta">
+                  <strong>NPR 120</strong>
+                  <button class="add-cart" type="button">Add to cart</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="product-card" data-category="nuts" data-name="Badam Testy" data-price="150">
+              <div class="product-image">
+                <img src="https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=800&q=80" alt="Badam testy" />
+              </div>
+              <div class="product-body">
+                <span class="pill">Rich</span>
+                <h3>Badam Testy</h3>
+                <p>Golden roasted blend with peanuts, gram flour, and savory spice seasoning.</p>
+                <div class="product-meta">
+                  <strong>NPR 150</strong>
+                  <button class="add-cart" type="button">Add to cart</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="product-card" data-category="savory nuts" data-name="Khatta Mitha" data-price="110">
+              <div class="product-image">
+                <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=800&q=80" alt="Khatta Mitha" />
+              </div>
+              <div class="product-body">
+                <span class="pill">Tangy</span>
+                <h3>Khatta Mitha</h3>
+                <p>Sweet and sour snack mix delivering the perfect balance of spice and bite.</p>
+                <div class="product-meta">
+                  <strong>NPR 110</strong>
+                  <button class="add-cart" type="button">Add to cart</button>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="section features">
+        <div class="container">
+          <div class="section-head center">
+            <p class="section-tag">Why choose us</p>
+            <h2>Trusted ingredients. Honest taste. Consistent quality.</h2>
+          </div>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="icon">🥭</div>
+              <h3>Authentic Recipes</h3>
+              <p>Traditional snack formulas with a modern food safety standard.</p>
+            </div>
+            <div class="feature-card">
+              <div class="icon">🌿</div>
+              <h3>Balanced Nutrition</h3>
+              <p>Recipes are designed to balance rich flavor while keeping food quality in focus.</p>
+            </div>
+            <div class="feature-card">
+              <div class="icon">📦</div>
+              <h3>Premium Packaging</h3>
+              <p>Every product is packed to retain freshness, crunch, and protection from dust.</p>
+            </div>
+            <div class="feature-card">
+              <div class="icon">🚚</div>
+              <h3>Fast Delivery</h3>
+              <p>Quick order handling and dependable support for retailers and families alike.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="testimonials" class="section testimonials">
+        <div class="container">
+          <div class="section-head center">
+            <p class="section-tag">Customer says</p>
+            <h2>Families and partners love what we create.</h2>
+          </div>
+
+          <div class="testimonial-slider">
+            <button class="slide-arrow prev" aria-label="Previous testimonial">‹</button>
+
+            <div class="testimonial-track">
+              <article class="testimonial active">
+                <p>
+                  “Loved these snacks. The flavor is excellent and the price is very reasonable.
+                  I can enjoy them anytime of the day.”
+                </p>
+                <div>
+                  <strong>Ramesh</strong>
+                  <span>Butwal</span>
+                </div>
+              </article>
+
+              <article class="testimonial">
+                <p>
+                  “There is a wide variety of products to choose from, and the delivery is fast.
+                  It feels easy to order and enjoy.”
+                </p>
+                <div>
+                  <strong>Prakash</strong>
+                  <span>Pokhara</span>
+                </div>
+              </article>
+
+              <article class="testimonial">
+                <p>
+                  “The product quality, packaging, and service are impressive. It is perfect for
+                  daily snacking and family gatherings.”
+                </p>
+                <div>
+                  <strong>Dhiraj</strong>
+                  <span>Chitwan</span>
+                </div>
+              </article>
+            </div>
+
+            <button class="slide-arrow next" aria-label="Next testimonial">›</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-banner">
+        <div class="container cta-inner">
+          <div>
+            <p class="section-tag light">Bring authentic taste home</p>
+            <h2>Ready to order your favorite snack mix?</h2>
+          </div>
+          <div class="cta-actions">
+            <a class="btn btn-primary" href="https://wa.me/9779869711440?text=Hello%20I%20want%20to%20order%20your%20products" target="_blank" rel="noreferrer">Chat on WhatsApp</a>
+            <button class="btn btn-secondary cart-trigger" type="button">Checkout now</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="cart-panel" aria-label="Shopping cart">
+      <div class="cart-header">
+        <h3>Your Cart</h3>
+        <button type="button" class="close-cart" aria-label="Close cart">×</button>
+      </div>
+
+      <div id="cart-items" class="cart-items">
+        <p class="empty-state">Your cart is empty.</p>
+      </div>
+
+      <div class="cart-summary">
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <strong id="subtotal">NPR 0</strong>
+        </div>
+        <form id="order-form" class="order-form">
+          <input type="text" name="customerName" placeholder="Full name" required />
+          <input type="tel" name="phone" placeholder="Phone number" required />
+          <input type="email" name="email" placeholder="Email address" />
+          <textarea name="address" rows="3" placeholder="Delivery address"></textarea>
+          <textarea name="note" rows="2" placeholder="Delivery notes"></textarea>
+          <button type="submit" class="btn btn-primary full-width">Place order</button>
+        </form>
+      </div>
+    </aside>
+
+    <div class="cart-overlay"></div>
+
+    <footer id="contact" class="site-footer">
+      <div class="container footer-grid">
+        <div>
+          <a class="brand footer-brand" href="#top">
+            <span class="brand-mark">M</span>
+            <div>
+              <strong>Mahashree</strong>
+              <small>Namkeen</small>
+            </div>
+          </a>
+          <p>
+            Premium snacks made with authentic Nepali taste and a focus on freshness, flavor,
+            and customer trust.
+          </p>
+        </div>
+
+        <div>
+          <h3>Contact Us</h3>
+          <ul>
+            <li>Kailali, Lamki</li>
+            <li><a href="tel:+9779869711440">+977 9869711440</a></li>
+            <li><a href="mailto:info@mahaspicesfood.com">info@mahaspicesfood.com</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3>Reach us</h3>
+          <p>
+            <a href="https://maps.google.com/?q=28.6208333,81.1409444" target="_blank" rel="noreferrer">
+              View location on map
+            </a>
+          </p>
+          <div class="social-links">
+            <a href="https://www.facebook.com/mahaspicefoodproduct" target="_blank" rel="noreferrer" aria-label="Facebook">Facebook</a>
+            <a href="https://www.instagram.com/mahaspicefood/" target="_blank" rel="noreferrer" aria-label="Instagram">Instagram</a>
+            <a href="https://wa.me/9779869711440?text=Hello%20I%20need%20support" target="_blank" rel="noreferrer" aria-label="WhatsApp">WhatsApp</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-bar">
+        <div class="container bottom-inner">
+          <span>© <span id="year"></span> Mahashree Namkeen</span>
+          <span>Design inspired by trust, taste, and quality.</span>
+        </div>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

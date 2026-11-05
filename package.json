@@ -1,0 +1,22 @@
+{
+  "name": "cde",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node -e \"console.log('No automated tests yet.');\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Mahashree Namkeen store website with cart and admin order dashboard.",
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "express-session": "^1.19.0",
+    "mongodb": "^6.22.0",
+    "mysql2": "^3.24.6",
+    "sqlite3": "^6.0.1"
+  }
+}

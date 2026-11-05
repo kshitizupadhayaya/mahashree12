@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cde-app
+    ports:
+      - "${PORT:-8000}:8000"
+    env_file:
+      - .env
+    environment:
+      PORT: ${PORT:-8000}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      SESSION_SECRET: ${SESSION_SECRET:-change_this_secret}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017/mahashree_namkeen}
+      MONGODB_DB: ${MONGODB_DB:-mahashree_namkeen}
+      MYSQL_HOST: ${MYSQL_HOST:-mysql}
+      MYSQL_PORT: ${MYSQL_PORT:-3306}
+      MYSQL_USER: ${MYSQL_USER:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-mahashree_namkeen}
+    depends_on:
+      - mongo
+      - mysql
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    container_name: cde-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: mahashree_namkeen
+    volumes:
+      - mongo_data:/data/db
+
+  mysql:
+    image: mysql:8.0
+    container_name: cde-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: mahashree_namkeen
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mongo_data:
+  mysql_data:

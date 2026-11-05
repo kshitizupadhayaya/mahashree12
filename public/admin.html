@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Orders | Mahashree Namkeen</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f8f7f5;
+        color: #1a1a1a;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 28px 18px 60px;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 3rem);
+      }
+      .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        border: none;
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .logout-btn {
+        background: #d62828;
+        color: white;
+      }
+      .reset-btn {
+        background: #1f2937;
+        color: white;
+      }
+      .export-btn {
+        background: #166534;
+        color: white;
+      }
+      .status {
+        background: #fff;
+        padding: 16px 18px;
+        border-radius: 14px;
+        border: 1px solid #e9e1d8;
+        margin-bottom: 24px;
+        font-weight: 600;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+      .stat-card {
+        background: white;
+        border: 1px solid #ece1d6;
+        border-radius: 16px;
+        padding: 18px;
+      }
+      .stat-card small {
+        display: block;
+        color: #666;
+        margin-bottom: 8px;
+      }
+      .stat-card strong {
+        font-size: clamp(1.5rem, 2vw, 2.3rem);
+      }
+      .db-box {
+        background: #fff7ed;
+        border: 1px solid #f7d9ab;
+        border-radius: 14px;
+        padding: 16px 18px;
+        margin-bottom: 24px;
+      }
+      .db-label {
+        display: inline-block;
+        background: #111827;
+        color: white;
+        border-radius: 999px;
+        padding: 6px 10px;
+        margin-bottom: 10px;
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .product-manager {
+        background: white;
+        border: 1px solid #eee4d9;
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 24px;
+      }
+      .product-manager h2 {
+        margin-top: 0;
+        margin-bottom: 16px;
+      }
+      .product-form-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .product-form-grid input,
+      .product-form-grid textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+        font: inherit;
+      }
+      .product-form-grid textarea {
+        grid-column: 1 / -1;
+        min-height: 80px;
+        resize: vertical;
+      }
+      .product-form-grid input[type="file"] {
+        padding: 8px 10px;
+        background: #fffaf5;
+      }
+      .product-form-grid .submit-btn {
+        background: #b45309;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.04);
+      }
+      th, td {
+        text-align: left;
+        padding: 14px 16px;
+        border-bottom: 1px solid #f0ebe7;
+        vertical-align: top;
+      }
+      th {
+        background: #fff7f0;
+      }
+      ul { margin: 0; padding-left: 18px; }
+      .empty {
+        background: #fff;
+        border: 1px solid #ebdfd4;
+        border-radius: 12px;
+        padding: 22px;
+      }
+      .muted {
+        color: #666;
+      }
+      @media (max-width: 720px) {
+        .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .topbar { align-items: flex-start; flex-direction: column; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="topbar">
+        <h1>Order Dashboard</h1>
+        <div class="actions">
+          <button class="btn export-btn" id="export-btn" type="button">Export JSON</button>
+          <button class="btn reset-btn" id="reset-btn" type="button">Clear All Orders</button>
+          <button class="btn logout-btn" id="logout-btn" type="button">Logout</button>
+        </div>
+      </div>
+
+      <div id="status" class="status">Loading dashboard…</div>
+
+      <div class="stats-grid" id="stats-grid"></div>
+
+      <div class="db-box" id="db-box"></div>
+
+      <div class="product-manager">
+        <h2>Add New Product</h2>
+        <form id="product-form">
+          <div class="product-form-grid">
+            <input type="text" name="name" placeholder="Product name" required />
+            <input type="text" name="category" placeholder="Category" required />
+            <input type="number" name="price" placeholder="Price" min="1" step="1" required />
+            <input type="file" id="product-image-file" accept="image/*" />
+            <button class="submit-btn" type="submit">Add Product</button>
+            <input type="url" name="image" placeholder="Image URL (optional if uploading a file)" />
+            <textarea name="description" placeholder="Short description"></textarea>
+          </div>
+        </form>
+        <div id="product-list"></div>
+      </div>
+
+      <div id="orders-container"></div>
+    </div>
+
+    <script>
+      const statusBox = document.getElementById('status');
+      const statsGrid = document.getElementById('stats-grid');
+      const dbBox = document.getElementById('db-box');
+      const container = document.getElementById('orders-container');
+      const productForm = document.getElementById('product-form');
+      const productList = document.getElementById('product-list');
+      const productImageFile = document.getElementById('product-image-file');
+
+      function formatCurrency(value) {
+        return `NPR ${Number(value || 0).toFixed(0)}`;
+      }
+
+      function readImageAsDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          if (!file) {
+            resolve('');
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ''));
+          reader.onerror = () => reject(new Error('Unable to read the selected image file.'));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function renderStats(dashboard) {
+        statsGrid.innerHTML = `
+          <div class="stat-card">
+            <small>Total Orders</small>
+            <strong>${dashboard.total_orders}</strong>
+          </div>
+          <div class="stat-card">
+            <small>Revenue</small>
+            <strong>${formatCurrency(dashboard.total_revenue)}</strong>
+          </div>
+          <div class="stat-card">
+            <small>Today</small>
+            <strong>${dashboard.today_orders}</strong>
+          </div>
+          <div class="stat-card">
+            <small>DB Status</small>
+            <strong>${dashboard.db_connected ? 'Connected' : 'Offline'}</strong>
+          </div>
+        `;
+
+        dbBox.innerHTML = `
+          <span class="db-label">Database Manager</span>
+          <strong>Database connection:</strong>
+          <div class="muted">Type: ${dashboard.db_type}</div>
+          <div class="muted">Path: ${dashboard.db_path}</div>
+          <div class="muted">Mode: ${dashboard.db_type === 'MongoDB Atlas' ? 'Managed MongoDB Atlas' : dashboard.db_type === 'MySQL' ? 'Managed MySQL database' : 'SQLite fallback'}</div>
+        `;
+      }
+
+      function renderProducts(products) {
+        if (!products || products.length === 0) {
+          productList.innerHTML = '<div class="empty">No products available yet.</div>';
+          return;
+        }
+
+        productList.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Image</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${products.map((product) => `
+                <tr>
+                  <td>${product.name}</td>
+                  <td>${product.category}</td>
+                  <td>${formatCurrency(product.price || 0)}</td>
+                  <td><img src="${product.image || ''}" alt="${product.name || 'Product'}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" /></td>
+                  <td><button type="button" class="delete-product" data-id="${product.id}" style="background:#dc2626;color:white;border:none;border-radius:8px;padding:8px 10px;cursor:pointer;">Delete</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+
+        productList.querySelectorAll('.delete-product').forEach((button) => {
+          button.addEventListener('click', async () => {
+            const productId = button.dataset.id;
+            const confirmed = window.confirm('Are you sure you want to delete this product?');
+            if (!confirmed) return;
+
+            const response = await fetch(`/api/admin/products/${productId}`, { method: 'DELETE' });
+            const result = await response.json();
+
+            if (!response.ok) {
+              alert(result.message || 'Failed to delete product.');
+              return;
+            }
+
+            alert(result.message);
+            fetchDashboard().catch((error) => {
+              statusBox.textContent = error.message;
+            });
+          });
+        });
+      }
+
+      function renderOrders(orders) {
+        if (!orders || orders.length === 0) {
+          container.innerHTML = '<div class="empty">No orders placed yet.</div>';
+          return;
+        }
+
+        const rows = orders.map((order) => {
+          const items = (order.items || []).map((item) => `<li>${item.name} x ${item.quantity} - NPR ${item.price * item.quantity}</li>`).join('');
+          return `
+            <table>
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Address</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Order Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>#${order.id}</td>
+                  <td>${order.customer_name || 'N/A'}</td>
+                  <td>${order.phone || 'N/A'}</td>
+                  <td>${order.email || 'N/A'}</td>
+                  <td>${order.address || 'N/A'}</td>
+                  <td><ul>${items || '<li>No items</li>'}</ul></td>
+                  <td>${formatCurrency(order.total || 0)}</td>
+                  <td>${new Date(order.created_at).toLocaleString()}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="height: 16px;"></div>
+          `;
+        }).join('');
+
+        container.innerHTML = rows;
+      }
+
+      async function fetchDashboard() {
+        const response = await fetch('/api/admin/dashboard');
+        const result = await response.json();
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            window.location.href = '/admin';
+            return;
+          }
+          throw new Error(result.message || 'Unable to load dashboard.');
+        }
+
+        renderStats(result.dashboard);
+        renderProducts(result.products || []);
+        renderOrders(result.orders);
+        statusBox.textContent = `${result.orders.length} order(s) found in the database.`;
+      }
+
+      productForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(productForm);
+        const urlImage = formData.get('image')?.toString().trim();
+        const file = productImageFile?.files?.[0];
+
+        try {
+          const uploadedImage = file ? await readImageAsDataUrl(file) : '';
+          const image = uploadedImage || urlImage;
+
+          if (!image) {
+            alert('Please select an image file or enter an image URL.');
+            return;
+          }
+
+          const payload = {
+            name: formData.get('name')?.toString().trim(),
+            category: formData.get('category')?.toString().trim(),
+            price: Number(formData.get('price') || 0),
+            image,
+            description: formData.get('description')?.toString().trim(),
+          };
+
+          const response = await fetch('/api/admin/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          const result = await response.json();
+          if (!response.ok) {
+            alert(result.message || 'Failed to add product.');
+            return;
+          }
+
+          productForm.reset();
+          if (productImageFile) productImageFile.value = '';
+          alert(result.message);
+          fetchDashboard().catch((error) => {
+            statusBox.textContent = error.message;
+          });
+        } catch (error) {
+          alert(error.message || 'Unable to process the image upload.');
+        }
+      });
+
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        await fetch('/api/admin/logout', { method: 'POST' });
+        window.location.href = '/admin';
+      });
+
+      document.getElementById('export-btn').addEventListener('click', async () => {
+        const response = await fetch('/api/admin/dashboard');
+        const result = await response.json();
+        if (!response.ok) return;
+
+        const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'maha-orders.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      document.getElementById('reset-btn').addEventListener('click', async () => {
+        const confirmed = window.confirm('Are you sure you want to delete all orders from the database?');
+        if (!confirmed) return;
+
+        const response = await fetch('/api/admin/orders/reset', { method: 'POST' });
+        const result = await response.json();
+
+        if (!response.ok) {
+          alert(result.message || 'Failed to clear orders.');
+          return;
+        }
+
+        alert(result.message);
+        fetchDashboard().catch((error) => {
+          statusBox.textContent = error.message;
+        });
+      });
+
+      fetchDashboard().catch((error) => {
+        statusBox.textContent = error.message;
+        container.innerHTML = '<div class="empty">Failed to load admin dashboard.</div>';
+      });
+    </script>
+  </body>
+</html>
