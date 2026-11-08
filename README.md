@@ -1,132 +1,144 @@
-# CDE - Mahashree Namkeen
+# Mahashree Namkeen (CDE)
 
-A Node.js Express storefront and admin dashboard for a namkeen shop. The project includes product listing, cart flow, checkout form, and an admin panel for viewing placed orders.
+Node.js/Express web app for a Mahashree Namkeen storefront and admin dashboard. Customers can browse products/categories, manage a cart, and place orders; admins can manage products/categories, places, and orders.
 
-## Features
+## Technology stack
 
-- Customer-facing storefront
-- Product catalog with pricing and descriptions
-- Shopping cart and checkout form
-- Admin login page
-- Admin dashboard for managing and viewing orders
-- Database support for SQLite, MySQL, or MongoDB
-- Docker support for quick local setup
+- **Runtime:** Node.js
+- **Backend:** Express 5
+- **Sessions:** `express-session`
+- **Config:** `dotenv`
+- **Databases (selectable):** SQLite (default/local), MongoDB (`mongodb`), MySQL (`mysql2`)
+- **Frontend:** Static HTML/CSS/vanilla JS served from `public/`
+- **Deployment/config:** Docker/Docker Compose, `render.yaml`
 
-## Tech Stack
+## Project structure
 
-- Node.js
-- Express
-- SQLite (default)
-- MySQL (optional)
-- MongoDB Atlas / local MongoDB (optional)
-- Docker / Docker Compose
-
-## Project Structure
-
-- [server.js](server.js) - main app and database logic
-- [public/index.html](public/index.html) - storefront page
-- [public/admin.html](public/admin.html) - admin dashboard
-- [public/admin-login.html](public/admin-login.html) - admin login page
-- [public/script.js](public/script.js) - frontend logic
-- [public/styles.css](public/styles.css) - styling
-- [Dockerfile](Dockerfile) - Docker image setup
-- [docker-compose.yml](docker-compose.yml) - multi-service app setup
-- [.env.example](.env.example) - environment variable template
-
-## Requirements
-
-- Node.js 18+
-- npm
-- Optional: Docker and Docker Compose
+```text
+.
+├── server.js                 # Express app, API routes, DB init/access, SPA/static serving
+├── public/
+│   ├── index.html            # Storefront SPA shell
+│   ├── script.js             # Storefront logic (catalog/cart/categories/checkout/UI)
+│   ├── styles.css            # Storefront and responsive styles
+│   ├── admin.html            # Admin dashboard UI
+│   ├── admin-login.html      # Admin login page
+│   └── images/               # Static image assets (served at /images/*)
+├── data/                     # Local SQLite DB directory (gitignored; created at runtime)
+├── package.json
+├── package-lock.json
+├── .env.example              # Environment variable template (copy to .env)
+├── Dockerfile
+├── docker-compose.yml
+└── render.yaml
+```
 
 ## Installation
 
-1. Clone the repository
-2. Install dependencies:
-
 ```bash
 npm install
-```
-
-3. Create your environment file from the example:
-
-```bash
 cp .env.example .env
 ```
 
-4. Update the values in [.env](.env) if needed.
+Edit `.env` with local values. **Do not commit `.env` or real credentials.**
 
-## Run Locally
+## Environment configuration
 
-### Using Node
+See `.env.example`. Key variables:
+
+| Variable | Purpose |
+|---|---|
+| `PORT` | HTTP port (default `8000`) |
+| `ADMIN_PASSWORD` | Admin login password (set a strong value; do not use defaults in shared/prod environments) |
+| `SESSION_SECRET` | Express session secret (set a long random value) |
+| `MONGODB_URI` / `MONGODB_DB` | Optional MongoDB connection; when set, app uses MongoDB |
+| `MYSQL_HOST` / `MYSQL_PORT` / `MYSQL_USER` / `MYSQL_PASSWORD` / `MYSQL_DATABASE` | Optional MySQL connection; used when MongoDB is not configured and MySQL settings are provided |
+
+**Database selection:** MongoDB if `MONGODB_URI` is set; otherwise MySQL if host/user/database are set; otherwise local SQLite at `data/orders.db` (created automatically). Fallback to SQLite occurs if configured MongoDB/MySQL is unavailable at startup.
+
+## Development / run commands
 
 ```bash
-npm start
+npm start          # node server.js
+npm run dev        # node --watch server.js
+npm test           # placeholder (no automated tests configured)
 ```
 
-Then open:
+Open: `http://localhost:8000/` (storefront), `http://localhost:8000/admin` (admin; use `ADMIN_PASSWORD`).
 
-```text
-http://localhost:8000
-```
+## Production build
 
-### Using Docker Compose
+No frontend build step. For production, run with a process manager/container and set strong `ADMIN_PASSWORD`/`SESSION_SECRET` plus the intended database environment variables.
+
+### Docker
 
 ```bash
 docker compose up --build
 ```
 
-Then open:
+`docker-compose.yml` includes app + optional MongoDB/MySQL services and bind-mounts `./data` for SQLite persistence. Override defaults via environment variables; do not rely on compose fallback passwords in real deployments.
 
-```text
-http://localhost:8000
-```
+## Important configuration details
 
-## Environment Variables
-
-The app uses variables such as:
-
-```env
-PORT=8000
-ADMIN_PASSWORD=your_admin_password
-SESSION_SECRET=your_session_secret
-
-MONGODB_URI=mongodb://mongo:27017/mahashree_namkeen
-MONGODB_DB=mahashree_namkeen
-
-MYSQL_HOST=mysql
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=your_mysql_password
-MYSQL_DATABASE=mahashree_namkeen
-```
-
-> Do not commit your real secrets to GitHub. Keep your local environment file private.
-
-## Database Modes
-
-The app supports:
-
-- SQLite by default
-- MySQL when configured
-- MongoDB when configured
-
-## GitHub Publish
-
-To push this project to GitHub:
-
-```bash
-git add .
-git commit -m "Initial project upload"
-git branch -M main
-git remote set-url origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-git push -u origin main
-```
+- **Security:** `.env` is gitignored. `server.js` currently has development fallback values for `ADMIN_PASSWORD`/`SESSION_SECRET` (pre-existing; flagged in cleanup report) — always set real env vars outside local development. `render.yaml` generates secrets for Render deploys.
+- **Data:** `data/*.db` and local DB files are gitignored. Do not commit runtime databases.
+- **Caching:** Static `.html/.js/.css` responses are served with no-store headers (hard refresh may be needed after deploy).
+- **Git:** `.kilo/` local tooling state is ignored for GitHub pushes.
 
 ## License
 
-This project is for educational and demo use.
+ISC (see `package.json`). Product branding/assets belong to their respective owners.
 
-## Contact
+## Docker (containerized)
 
-Mahashree Namkeen Store
+### Prerequisites
+- Docker Engine/Desktop with `docker compose` (Compose v2).
+
+### Environment
+```bash
+cp .env.example .env
+```
+Set strong values for `ADMIN_PASSWORD` and `SESSION_SECRET` before any shared/production use. Leave `MONGODB_URI`/MySQL blank for default **SQLite** (persisted in the `app_data` Docker volume). For **MongoDB Atlas**, set `MONGODB_URI` (and `MONGODB_DB`) to your Atlas URI — no local MongoDB container is required.
+
+### Run (single command, SQLite default)
+```bash
+docker compose up --build -d
+```
+
+### Optional local DB services
+```bash
+docker compose --profile local-db up --build -d
+```
+Then configure `.env` for the service you want:
+- Local MongoDB: `MONGODB_URI=mongodb://mongo:27017/mahashree_namkeen`
+- Local MySQL: `MYSQL_HOST=mysql`, `MYSQL_PORT=3306`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`, and `MYSQL_ROOT_PASSWORD` for the MySQL container.
+
+### Service ports
+| Service | Host port | Notes |
+|---|---:|---|
+| `app` | `${PORT:-8000}` → `8000` | Storefront `/`, admin `/admin`, APIs `/api/*` |
+| `mongo` (profile `local-db`) | internal only by default | Use Docker service name `mongo` from app |
+| `mysql` (profile `local-db`) | internal only by default | Use Docker service name `mysql` from app |
+
+### Docker networking and persistence
+- Network: `cde-network` (bridge). Containers use service names (`mongo`, `mysql`), not `localhost`, for inter-container DB access.
+- Volumes: `app_data` (`/app/data`, SQLite), `mongo_data`, `mysql_data` (created only when local-db profile/services are used).
+
+### Commands
+```bash
+docker compose config                  # validate compose
+docker compose up --build -d           # build and start
+docker compose ps                      # container status
+docker compose logs -f                 # logs
+docker compose logs -f app             # app logs
+docker compose down                    # stop/remove containers+network (keeps named volumes/data)
+docker compose --profile local-db down # stop including local-db services
+```
+**Do not run `docker compose down -v`** unless you intentionally want to delete database volumes/data.
+
+### Troubleshooting
+- **Docker unavailable/daemon not running:** install/start Docker, then rerun commands.
+- **`sqlite3`/native module build issues:** Dockerfile uses `node:20-alpine` with build deps in the deps stage; rebuild with `docker compose build --no-cache app`.
+- **Admin login fails:** ensure `ADMIN_PASSWORD`/`SESSION_SECRET` are set in `.env` and container restarted.
+- **DB connection:** check `docker compose logs app`. Atlas requires a valid `MONGODB_URI` and network egress. Local DB services require `--profile local-db` and correct service-name hosts (`mongo`/`mysql`).
+- **Port conflict:** change `PORT` in `.env`.
