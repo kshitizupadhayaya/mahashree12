@@ -3,8 +3,11 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const sqlite3 = require('sqlite3').verbose();
-const mysql = require('mysql2/promise');
+// Legacy SQLite/MySQL modules are not loaded at startup. Runtime app data uses MongoDB Atlas only.
+// Migration/backup scripts (scripts/*) may still use sqlite3 directly; keep package deps for them.
+function legacyDbUnavailable(name){ throw new Error(name + ' is not available: application runtime uses MongoDB Atlas only. Use migration scripts for legacy SQLite data.'); }
+const sqlite3 = { verbose: () => ({ Database: function(){ legacyDbUnavailable('SQLite'); } }) };
+const mysql = { createPool: function(){ legacyDbUnavailable('MySQL'); } };
 const { MongoClient, ObjectId } = require('mongodb');
 const session = require('express-session');
 
@@ -62,6 +65,15 @@ function normalizeProductCategory(raw, product) {
   if (LEGACY_CATEGORY_MAP[v]) return LEGACY_CATEGORY_MAP[v];
   return inferProductCategory({ ...(product || {}), category: raw || product?.category || '' });
 }
+function productImageRef(product){
+  const img = String(product && product.image || '');
+  const id = String(product && (product.id || product._id) || '');
+  if (!img) return '';
+  if (/^https?:\/\//i.test(img) || img.startsWith('/')) return img;
+  if (img.startsWith('data:image/')) return id ? `/api/products/${encodeURIComponent(id)}/image` : img;
+  if (img.length > 2000) return id ? `/api/products/${encodeURIComponent(id)}/image` : img;
+  return img;
+}
 function normalizeProductRow(row) {
   if (!row) return row;
   const category = normalizeProductCategory(row.category, row);
@@ -102,11 +114,15 @@ const DEFAULT_PRODUCTS = [
 
 const useMongo = Boolean(MONGODB_URI);
 const useMysql = Boolean(MYSQL_CONFIG.host && MYSQL_CONFIG.user && MYSQL_CONFIG.database);
-let databaseMode = 'sqlite';
+let databaseMode = 'mongodb-required';
 let mongoClient = null;
 let mongoDb = null;
 let mysqlPool = null;
-let sqliteDb = null;
+let sqliteDb = null; // legacy handle unused at runtime (MongoDB-only app data)
+let _productsCache = null;
+let _productsCacheAt = 0;
+const PRODUCTS_CACHE_TTL_MS = 30_000;
+function invalidateProductsCache(){ _productsCache = null; _productsCacheAt = 0; }
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -123,7 +139,13 @@ async function initMongo() {
   if (!useMongo) return null;
 
   try {
-    mongoClient = new MongoClient(MONGODB_URI);
+    mongoClient = new MongoClient(MONGODB_URI, {
+      maxPoolSize: 10,
+      minPoolSize: 0,
+      serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 15000,
+      socketTimeoutMS: 45000,
+    });
     await mongoClient.connect();
     mongoDb = mongoClient.db(MONGODB_DB);
     const ordersCollection = mongoDb.collection('orders');
@@ -397,29 +419,18 @@ function initSqlite() {
 }
 
 async function initializeDatabase() {
-  if (useMongo) {
-    try {
-      await initMongo();
-      databaseMode = 'mongodb';
-      return 'mongodb';
-    } catch (error) {
-      console.warn('Falling back to SQLite because MongoDB Atlas is unavailable.');
-    }
+  // Application data is stored in MongoDB Atlas only. Local SQLite (data/orders.db) is kept as backup/source for migration scripts and is not used for runtime app data.
+  if (!MONGODB_URI) {
+    throw new Error('MONGODB_URI is required. Application data uses MongoDB Atlas only. Set MONGODB_URI in .env (do not commit secrets).');
   }
-
-  if (useMysql) {
-    try {
-      await initMysql();
-      databaseMode = 'mysql';
-      return 'mysql';
-    } catch (error) {
-      console.warn('Falling back to SQLite because MySQL is unavailable.');
-    }
+  try {
+    await initMongo();
+    databaseMode = 'mongodb';
+    return 'mongodb';
+  } catch (error) {
+    console.error('MongoDB startup error:', error.message);
+    throw new Error('MongoDB Atlas connection failed. Runtime SQLite/MySQL fallback is disabled for application data. Check MONGODB_URI/network access.');
   }
-
-  initSqlite();
-  databaseMode = 'sqlite';
-  return 'sqlite';
 }
 
 function parseOrderJson(value, fallback) {
@@ -427,14 +438,51 @@ function parseOrderJson(value, fallback) {
   try { const parsed = typeof value === 'string' ? JSON.parse(value) : value; return parsed ?? fallback; } catch { return fallback; }
 }
 function normalizeMoney(value) { const n = Number(value); return Number.isFinite(n) ? Math.round(n * 100) / 100 : 0; }
-function normalizeOrder(row) {
-  if (!row) return row;
-  const items = parseOrderItems(row.items);
-  const customer = parseOrderJson(row.customer, null) || { name: row.customer_name || '', phone: row.phone || '', email: row.email || '', address: row.address || row.delivery_address || '' };
-  const totals = parseOrderJson(row.totals, null) || { subtotal: normalizeMoney(row.subtotal != null ? row.subtotal : row.total), deliveryCharge: normalizeMoney(row.delivery_charge), discount: normalizeMoney(row.discount), total: normalizeMoney(row.total) };
-  return { ...row, id: row.id != null ? String(row.id) : row.id, customer_name: row.customer_name || customer.name || '', phone: row.phone || customer.phone || '', email: row.email || customer.email || '', address: row.address || customer.address || row.delivery_address || '', delivery_address: row.delivery_address || row.address || customer.address || '', items, subtotal: totals.subtotal, delivery_charge: totals.deliveryCharge, discount: totals.discount, total: totals.total, payment_method: row.payment_method || 'Cash on Delivery', payment_status: row.payment_status || 'Pending', status: row.status || 'pending', idempotency_key: row.idempotency_key || row.client_order_id || '', customer, totals };
+function stripOrderItemImages(items){
+  return (Array.isArray(items)?items:[]).map((it)=>{
+    if(!it || typeof it!=='object') return it;
+    const img = String(it.image||'');
+    if (img.length > 2000 && /^data:image\//i.test(img)) return { ...it, image:'', image_stripped:true };
+    return it;
+  });
 }
-
+function normalizeOrder(row, opts = {}) {
+  if (!row) return row;
+  const rawItems = parseOrderItems(row.items);
+  const normalizedItems = (Array.isArray(rawItems)?rawItems:[]).map((it)=>{
+    const p = Number(it && (it.price ?? it.unit_price ?? it.unitPrice));
+    const q = Math.max(1, Math.floor(Number(it && it.quantity) || 1));
+    const price = Number.isFinite(p) && p >= 0 ? p : 0;
+    return { ...it, price, quantity:q, lineTotal: normalizeMoney(price * q) };
+  });
+  const subtotal = normalizedItems.length
+    ? normalizeMoney(normalizedItems.reduce((sum,i)=>sum + i.lineTotal, 0))
+    : normalizeMoney(row.subtotal ?? row.total ?? 0);
+  const safeDiscount = Math.max(0, Math.min(subtotal, normalizeMoney(row.discount ?? row.totals?.discount ?? 0)));
+  const computedTotal = normalizeMoney(Math.max(0, subtotal - safeDiscount));
+  const itemCount = normalizedItems.reduce((sum,i)=>sum + (Number(i.quantity)||0), 0);
+  const customer = parseOrderJson(row.customer, null) || { name: row.customer_name || '', phone: row.phone || '', email: row.email || '', address: row.address || row.delivery_address || '' };
+  return {
+    ...row,
+    id: row.id != null ? String(row.id) : row.id,
+    customer_name: row.customer_name || customer.name || '',
+    phone: row.phone || customer.phone || '',
+    email: row.email || customer.email || '',
+    address: row.address || customer.address || row.delivery_address || '',
+    delivery_address: row.delivery_address || row.address || customer.address || '',
+    items: (opts && opts.keepItemImages) ? normalizedItems : stripOrderItemImages(normalizedItems),
+    subtotal,
+    delivery_charge: 0,
+    discount: safeDiscount,
+    total: computedTotal,
+    payment_method: row.payment_method || 'Cash on Delivery',
+    payment_status: row.payment_status || 'Pending',
+    status: row.status || 'pending',
+    idempotency_key: row.idempotency_key || row.client_order_id || '',
+    customer,
+    totals: { subtotal, deliveryCharge: 0, discount: safeDiscount, total: computedTotal, itemCount },
+  };
+}
 function parseOrderItems(value) {
   if (!value) return [];
 
@@ -492,29 +540,22 @@ async function insertProduct(productData) {
   });
 }
 
-async function getAllProducts() {
-  if (mongoDb) {
-    const rows = await mongoDb.collection('products').find({}).sort({ created_at: -1 }).toArray();
-    return rows.map((row) => ({
-      ...row,
-      id: row._id.toString(),
-      _id: undefined,
-    })).map(normalizeProductRow);
+async function getAllProducts(opts = {}) {
+  const { force = false, projection = null, limit = 0, skip = 0 } = opts || {};
+  if (!mongoDb) throw new Error('Database unavailable. MongoDB Atlas is required for application data.');
+  // Lightweight metadata/listing can avoid transferring large base64 image payloads when explicitly requested.
+  if (projection) {
+    const q = mongoDb.collection('products').find({}, { projection }).sort({ created_at: -1 });
+    if (skip > 0) q.skip(skip);
+    if (limit > 0) q.limit(limit);
+    const rows = await q.toArray();
+    return rows.map((row) => normalizeProductRow({ ...row, id: row._id.toString(), _id: undefined }));
   }
-
-  if (useMysql && mysqlPool) {
-    const [rows] = await mysqlPool.query(`SELECT * FROM products ORDER BY created_at DESC`);
-    return rows.map((row) => ({
-      ...row,
-    })).map(normalizeProductRow);
-  }
-
-  return new Promise((resolve, reject) => {
-    sqliteDb.all(`SELECT * FROM products ORDER BY created_at DESC`, (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows.map(normalizeProductRow));
-    });
-  });
+  if (!force && _productsCache && (Date.now() - _productsCacheAt) < PRODUCTS_CACHE_TTL_MS) return _productsCache;
+  const rows = await mongoDb.collection('products').find({}).sort({ created_at: -1 }).toArray();
+  const products = rows.map((row) => normalizeProductRow({ ...row, id: row._id.toString(), _id: undefined }));
+  _productsCache = products; _productsCacheAt = Date.now();
+  return products;
 }
 
 async function updateProductById(productId, productData) {
@@ -532,6 +573,7 @@ async function updateProductById(productId, productData) {
   if (mongoDb) {
     const r = await mongoDb.collection('products').updateOne({ _id: new ObjectId(productId) }, { $set: { name: cleanName, category: cleanCategory, price: cleanPrice, description: cleanDescription, image: cleanImage } });
     if (r.matchedCount === 0) throw new Error('Product not found.');
+    invalidateProductsCache();
     return normalizeProductRow({ ...existing, id: String(productId), name: cleanName, category: cleanCategory, price: cleanPrice, description: cleanDescription, image: cleanImage });
   }
   if (useMysql && mysqlPool) {
@@ -558,6 +600,7 @@ async function deleteProductById(productId) {
     if (result.deletedCount === 0) {
       throw new Error('Product not found.');
     }
+    invalidateProductsCache();
     return { success: true };
   }
 
@@ -1016,6 +1059,7 @@ app.use(session({
   cookie: {
     httpOnly: true,
     sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production' && String(process.env.COOKIE_SECURE || '').toLowerCase() === 'true',
     maxAge: 1000 * 60 * 60 * 8,
   },
 }));
@@ -1030,14 +1074,31 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+const _loginAttempts = new Map();
+function loginRateLimited(ip){
+  const now=Date.now(); const key=String(ip||'unknown');
+  const rec=_loginAttempts.get(key)||{count:0,reset:now+15*60*1000};
+  if(now>rec.reset){ rec.count=0; rec.reset=now+15*60*1000; }
+  rec.count++; _loginAttempts.set(key,rec);
+  return rec.count>20;
+}
 app.post('/api/admin/login', (req, res) => {
-  const { password } = req.body || {};
-
-  if (password === ADMIN_PASSWORD) {
-    req.session.admin = true;
-    return res.json({ success: true, message: 'Login successful.' });
+  if(loginRateLimited(req.ip||req.connection?.remoteAddress)) return res.status(429).json({success:false,message:'Too many login attempts. Try again later.'});
+  const password = String((req.body || {}).password || '');
+  const expected = String(ADMIN_PASSWORD || '');
+  let ok = false;
+  try {
+    const a = Buffer.from(password); const b = Buffer.from(expected);
+    ok = a.length > 0 && a.length === b.length && crypto.timingSafeEqual(a, b);
+  } catch { ok = false; }
+  if (ok) {
+    req.session.regenerate((err) => {
+      if (err) return res.status(500).json({ success: false, message: 'Unable to create admin session.' });
+      req.session.admin = true;
+      return res.json({ success: true, message: 'Login successful.' });
+    });
+    return;
   }
-
   return res.status(401).json({ success: false, message: 'Invalid admin password.' });
 });
 
@@ -1060,11 +1121,54 @@ function requireAdmin(req, res, next) {
 
 app.get('/api/products', async (req, res) => {
   try {
-    const products = await getAllProducts();
-    return res.json({ success: true, products });
+    if (!mongoDb) throw new Error('Database unavailable. MongoDB Atlas is required for application data.');
+    const page = Math.max(1, Math.min(10000, Number(req.query.page) || 1));
+    const pageSizeRaw = req.query.pageSize ?? req.query.limit;
+    const pageSize = Math.max(1, Math.min(200, Number(pageSizeRaw) || 200));
+    const includeImageData = String(req.query.includeImageData || '0') === '1';
+    const includeTotal = String(req.query.includeTotal || '0') === '1';
+    const skip = (page - 1) * pageSize;
+    const projection = includeImageData ? undefined : { name:1, category:1, price:1, description:1, created_at:1, legacy_sqlite_id:1 }; // exclude large image from list by omission
+    const col = mongoDb.collection('products');
+    const rows = await col.find({}, { projection }).sort({ created_at: -1 }).skip(skip).limit(pageSize).maxTimeMS(10000).toArray();
+    const products = rows.map((row) => {
+      const id = row._id.toString();
+      const p = normalizeProductRow({ ...row, id, _id: undefined });
+      if (!includeImageData) p.image = `/api/products/${encodeURIComponent(id)}/image`;
+      return p;
+    });
+    const payload = { success: true, products, page, pageSize };
+    if (includeTotal || pageSizeRaw != null || req.query.page != null) payload.total = await col.estimatedDocumentCount(), payload.totalPages = Math.max(1, Math.ceil(payload.total / pageSize)), payload.pagination = { page, pageSize, total: payload.total, totalPages: payload.totalPages, hasPrev: page>1, hasNext: page < payload.totalPages };
+    res.set('Cache-Control', 'public, max-age=60');
+    return res.json(payload);
   } catch (error) {
-    console.error('Product fetch error:', error.message);
+    console.error('Product fetch error:', error && (error.stack||error.message));
     return res.status(500).json({ success: false, message: 'Unable to load products.' });
+  }
+});
+app.get('/api/products/:id/image', async (req, res) => {
+  try {
+    if (!mongoDb) return res.status(503).send('Database unavailable');
+    const _id = new ObjectId(String(req.params.id));
+    const row = await mongoDb.collection('products').findOne({ _id }, { projection: { image: 1 } });
+    if (!row) return res.status(404).send('Not found');
+    const img = String(row.image || '');
+    if (!img) return res.status(404).send('Not found');
+    if (/^https?:\/\//i.test(img)) return res.redirect(img);
+    if (img.startsWith('data:')) {
+      const m = img.match(/^data:([^;,]+)?(?:;base64)?,(.*)$/s);
+      if (m) {
+        const type = m[1] || 'application/octet-stream';
+        const data = img.includes(';base64,') ? Buffer.from(m[2], 'base64') : Buffer.from(decodeURIComponent(m[2]));
+        res.set('Content-Type', type);
+        res.set('Cache-Control', 'public, max-age=86400');
+        return res.send(data);
+      }
+    }
+    res.set('Cache-Control', 'public, max-age=300');
+    return res.type('text/plain').send(img);
+  } catch (error) {
+    return res.status(400).send('Invalid product image request');
   }
 });
 
@@ -1082,11 +1186,22 @@ app.post('/api/admin/dashboard/refresh-stats', requireAdmin, async (req, res) =>
 
 app.get('/api/admin/dashboard', requireAdmin, async (req, res) => {
   try {
-    const dashboard = await getDashboardSummary();
-    const products = await getAllProducts();
-    return res.json({ success: true, dashboard, products, orders: dashboard.orders || [] });
+    if (!mongoDb) throw new Error('Database unavailable. MongoDB Atlas is required for application data.');
+    const stats = await getPersistentDashboardSummary().catch(()=>({ total_orders:0,total_revenue:0,total_sales:0,today_orders:0,today_revenue:0,week_orders:0,week_revenue:0,month_orders:0,month_revenue:0 }));
+    const recentPage = Math.max(1, Math.min(100000, Number(req.query.orderPage)||1));
+    const recentSize = Math.max(1, Math.min(100, Number(req.query.orderPageSize)||10));
+    const [productRows, recent] = await Promise.all([
+      mongoDb.collection('products').find({}, { projection: { name:1, category:1, price:1, description:1, created_at:1, legacy_sqlite_id:1 } }).sort({ created_at: -1 }).limit(500).maxTimeMS(10000).toArray(),
+      queryOrdersPage({ page: recentPage, pageSize: recentSize, status: req.query.orderStatus || 'all' })
+    ]);
+    const products = productRows.map((row) => {
+      const id = row._id.toString();
+      return normalizeProductRow({ ...row, id, _id: undefined, image: `/api/products/${encodeURIComponent(id)}/image` });
+    });
+    const dashboard = { ...stats, completed_orders:Number(stats.completed_orders||0), pending_orders:Number(stats.pending_orders||0), cancelled_rejected_orders:Number(stats.cancelled_rejected_orders||0), revenue_rule:'Dashboard overview statistics are stored permanently and independently. New orders increment stored stats (idempotent). Deleting active orders never decreases them. Reset only via explicit admin Clear Statistics.', db_path:maskMongoUri(MONGODB_URI), db_connected:true, db_type:'MongoDB Atlas', orders: recent.orders };
+    return res.json({ success: true, dashboard, products, orders: recent.orders, orderPagination: recent.pagination });
   } catch (error) {
-    console.error('Dashboard summary error:', error.message);
+    console.error('Dashboard summary error:', error && (error.stack || error.message));
     return res.status(500).json({ success: false, message: 'Unable to load admin dashboard.' });
   }
 });
@@ -1164,25 +1279,62 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
+function buildOrdersFilter(q={}){
+  const filter={};
+  const status=String(q.status||'').trim().toLowerCase();
+  if(status && status!=='all'){
+    if(status==='completed') filter.status={$in:['completed','delivered']};
+    else if(status==='cancelled_rejected'||status==='trash') filter.status={$in:['cancelled','rejected','failed','refunded']};
+    else if(status==='active') filter.status={$nin:['cancelled','rejected','failed','refunded']};
+    else filter.status=status;
+  }
+  const search=String(q.search||q.q||'').trim();
+  if(search){
+    const rx=new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i');
+    filter.$or=[{id:rx},{_id:{$exists:true}},{customer_name:rx},{phone:rx},{email:rx},{'customer.name':rx},{'customer.phone':rx},{'items.name':rx},{status:rx}];
+    // _id text match not useful; keep simple string fields
+    filter.$or=filter.$or.filter(x=>!x._id);
+  }
+  return filter;
+}
+async function queryOrdersPage(q={}){
+  if(!mongoDb) throw new Error('Database unavailable. MongoDB Atlas is required for application data.');
+  const page=Math.max(1, Math.min(100000, Number(q.page)||1));
+  const pageSize=Math.max(1, Math.min(200, Number(q.pageSize||q.limit)||20));
+  const skip=(page-1)*pageSize;
+  const filter=buildOrdersFilter(q);
+  const col=mongoDb.collection('orders');
+  const projection={order_snapshot:0}; // never needed in list APIs
+  const [rows,total]=await Promise.all([
+    col.find(filter,{projection}).sort({created_at:-1}).skip(skip).limit(pageSize).maxTimeMS(15000).toArray(),
+    col.countDocuments(filter,{maxTimeMS:15000})
+  ]);
+  const orders=rows.map(row=>normalizeOrder({...row,id:row._id.toString(),_id:undefined}));
+  const totalPages=Math.max(1, Math.ceil(total/pageSize));
+  return {orders,total,page,pageSize,totalPages,pagination:{page,pageSize,total,totalPages,hasPrev:page>1,hasNext:page<totalPages}};
+}
 app.get('/api/orders', requireAdmin, async (req, res) => {
   try {
-    const orders = await getAllOrders();
-    return res.json({ success: true, orders });
+    const data=await queryOrdersPage(req.query||{});
+    return res.json({ success: true, orders: data.orders, total: Number(data.total||0), page: Number(data.page||1), pageSize: Number(data.pageSize||20), totalPages: Number(data.totalPages||1), pagination: data.pagination || {page:data.page,pageSize:data.pageSize,total:data.total,totalPages:data.totalPages} });
   } catch (error) {
-    console.error('Order fetch error:', error.message);
+    console.error('Order fetch error:', error && (error.stack||error.message));
     return res.status(500).json({ success: false, message: 'Unable to load orders.' });
   }
 });
 
 app.get('/api/categories', async (req, res) => {
   try {
-    const products = await getAllProducts();
-    const counts = new Map();
-    let uncategorized = 0;
-    products.forEach((p) => { if (p.category === 'uncategorized') uncategorized++; else counts.set(p.category, (counts.get(p.category) || 0) + 1); });
-    const categories = PRODUCT_CATEGORIES.map((c) => ({ ...c, count: c.slug === 'all-products' ? products.length : (counts.get(c.slug) || 0), system: c.slug === 'all-products' }));
+    if (!mongoDb) throw new Error('Database unavailable. MongoDB Atlas is required for application data.');
+    const rows = await mongoDb.collection('products').aggregate([
+      { $group: { _id: '$category', count: { $sum: 1 } } }
+    ], { maxTimeMS: 10000 }).toArray();
+    const counts = new Map(); let total = 0, uncategorized = 0;
+    rows.forEach((r) => { const n = Number(r.count || 0); total += n; const c = String(r._id || 'uncategorized'); if (c === 'uncategorized') uncategorized += n; else counts.set(c, (counts.get(c) || 0) + n); });
+    const categories = PRODUCT_CATEGORIES.map((c) => ({ ...c, count: c.slug === 'all-products' ? total : (counts.get(c.slug) || 0), system: c.slug === 'all-products' }));
     if (uncategorized > 0) categories.push({ slug: 'uncategorized', label: 'Uncategorized', icon: '📦', count: uncategorized, system: true });
-    return res.json({ success: true, categories, totalProducts: products.length });
+    res.set('Cache-Control', 'public, max-age=60');
+    return res.json({ success: true, categories, totalProducts: total });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Unable to load categories.' });
   }

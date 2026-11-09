@@ -1,34 +1,24 @@
-# Default: app only with SQLite (./data persisted). Works without editing for local evaluation.
-# For MongoDB Atlas, set MONGODB_URI in .env and the app will use Atlas (no local DB services needed).
-# For optional local MongoDB/MySQL, use: docker compose --profile local-db up --build -d
-# and set MYSQL_HOST=mysql / MONGODB_URI=mongodb://mongo:27017/mahashree_namkeen as needed.
+# MongoDB Atlas runtime: app connects using MONGODB_URI from .env.
+# No local database containers are started/exposed by default.
+# Do not commit .env or real credentials.
 
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: cde-app
+    container_name: mahashree-cde-app
     restart: unless-stopped
     init: true
     ports:
       - "${PORT:-8000}:8000"
+    env_file:
+      - .env
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-production}
       PORT: 8000
-      # Defaults allow a simple first run; override in .env for real/shared deployments.
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change_me_admin_password}
-      SESSION_SECRET: ${SESSION_SECRET:-change_me_session_secret}
-      APP_URL: ${APP_URL:-}
-      # MongoDB: set MONGODB_URI to MongoDB Atlas or mongodb://mongo:27017/... (with --profile local-db)
-      MONGODB_URI: ${MONGODB_URI:-}
-      MONGODB_DB: ${MONGODB_DB:-mahashree_namkeen}
-      # MySQL: set MYSQL_HOST=mysql with --profile local-db for local MySQL, or an external host
-      MYSQL_HOST: ${MYSQL_HOST:-}
-      MYSQL_PORT: ${MYSQL_PORT:-3306}
-      MYSQL_USER: ${MYSQL_USER:-}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      # Required in .env: ADMIN_PASSWORD, SESSION_SECRET, MONGODB_URI, MONGODB_DB
     volumes:
       - app_data:/app/data
     healthcheck:
@@ -38,52 +28,11 @@ services:
       start_period: 20s
       retries: 3
     networks:
-      - cde-network
-
-  mongo:
-    image: mongo:7
-    container_name: cde-mongo
-    profiles: ["local-db"]
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_DATABASE: ${MONGODB_DB:-mahashree_namkeen}
-    volumes:
-      - mongo_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
-      interval: 10s
-      timeout: 5s
-      start_period: 15s
-      retries: 5
-    networks:
-      - cde-network
-
-  mysql:
-    image: mysql:8.0
-    container_name: cde-mysql
-    profiles: ["local-db"]
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change_me_mysql_root_password}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-mahashree_namkeen}
-      MYSQL_USER: ${MYSQL_USER:-cde}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change_me_mysql_password}
-    volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
-      interval: 10s
-      timeout: 5s
-      start_period: 30s
-      retries: 10
-    networks:
-      - cde-network
+      - app-network
 
 networks:
-  cde-network:
+  app-network:
     driver: bridge
 
 volumes:
   app_data:
-  mongo_data:
-  mysql_data:

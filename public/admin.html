@@ -373,6 +373,13 @@ async function adminApi(path, options={}){
 }
 
 function dateStr(v){const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleString();}
+function renderPager(id,state,onPage){
+  const el=document.getElementById(id); if(!el) return;
+  const p=state||{}; const page=Number(p.page||1), total=Number(p.total||0), totalPages=Math.max(1,Number(p.totalPages||1)), size=Number(p.pageSize||0);
+  if(total<=0 && page<=1){ el.innerHTML=''; return; }
+  el.innerHTML=`<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:10px"><div class="text-muted" style="font-size:12px">Page ${page} of ${totalPages} • ${total} total</div><div style="display:flex;gap:6px"><button class="btn btn-outline" style="padding:6px 10px" ${page<=1?'disabled':''} data-page="${page-1}">Prev</button><button class="btn btn-outline" style="padding:6px 10px" ${page>=totalPages?'disabled':''} data-page="${page+1}">Next</button></div></div>`;
+  el.querySelectorAll('button[data-page]').forEach(b=>b.addEventListener('click',()=>{ const n=Number(b.dataset.page); if(Number.isFinite(n)&&n>=1) onPage(n); }));
+}
 
 function switchPage(name, el){
   closeSidebar();
@@ -420,7 +427,7 @@ function stopDashboardAutoRefresh(){ if(dashboardRefreshTimer){ clearInterval(da
 function startDashboardAutoRefresh(){
   stopDashboardAutoRefresh();
   if(currentAdminPage !== 'dashboard') return;
-  dashboardRefreshTimer = setInterval(async()=>{
+  if(false) dashboardRefreshTimer = setInterval(async()=>{
     if(currentAdminPage !== 'dashboard' || document.hidden) return;
     try{
       const r=await fetch('/api/admin/dashboard',{credentials:'include'});
@@ -428,6 +435,8 @@ function startDashboardAutoRefresh(){
       if(!r.ok || !res.success) return;
       dashboardOrders=res.orders||[];
       renderRecentOrders(Array.isArray(dashboardOrders)?dashboardOrders:[]);
+      if(res.orderPagination){ dashboardOrderPageState={...dashboardOrderPageState,...res.orderPagination}; const goDashOrders = async (n)=>{ dashboardOrderPageState.page=n; const r2=await fetch('/api/admin/dashboard?orderPage='+encodeURIComponent(String(n))+'&orderPageSize='+encodeURIComponent(String(dashboardOrderPageState.pageSize||10)),{credentials:'include'}); const j2=await r2.json(); if(!r2.ok){ if(r2.status===401) location.href='/admin'; return; } dashboardOrders=j2.orders||[]; renderRecentOrders(dashboardOrders); if(j2.orderPagination){dashboardOrderPageState={...dashboardOrderPageState,...j2.orderPagination};} renderPager('dashboard-orders-pager',dashboardOrderPageState,goDashOrders); };
+      renderPager('dashboard-orders-pager',dashboardOrderPageState,goDashOrders); }
       const d=res.dashboard||{};
       document.querySelectorAll('.stat-card .stat-value').forEach((el,i)=>{ const vals=[Number(d.total_orders||0),fmt(d.total_revenue||0),Number(d.today_orders||0),fmt(d.today_revenue||0),Number(d.week_orders||0),fmt(d.week_revenue||0),Number(d.month_orders||0),fmt(d.month_revenue||0)]; if(vals[i]!=null) el.textContent=vals[i]; });
     }catch{}
@@ -453,7 +462,7 @@ async function renderPage(name){
           <div class="stat-card"><div class="stat-row"><span class="stat-label">Month Orders</span></div><div class="stat-value">${Number(d.month_orders||0)}</div><div class="stat-delta pos">Month</div></div>
           <div class="stat-card"><div class="stat-row"><span class="stat-label">Month Revenue</span></div><div class="stat-value">${fmt(d.month_revenue||0)}</div><div class="stat-delta pos">Month</div></div>
         </div>
-        <div class="panel"><h3 id="pending-orders-title">Pending Orders</h3><p class="text-muted" style="margin:-6px 0 12px;font-size:12px">New customer orders appear here automatically (pending). Accept moves to Order Items; Reject moves to Trash. Revenue excludes cancelled/rejected/failed/refunded.</p><div class="table-wrap" id="recent-orders"></div></div>
+        <div class="panel"><h3 id="pending-orders-title">Recent Orders</h3><p class="text-muted" style="margin:-6px 0 12px;font-size:12px">Order history loads by page for performance. Accept/Reject actions remain available. Revenue/statistics remain independent and persistent.</p><div class="table-wrap" id="recent-orders"></div><div id="dashboard-orders-pager"></div></div>
       `;
       renderRecentOrders(Array.isArray(res.orders)?res.orders:[]); startDashboardAutoRefresh();
     }catch(e){
@@ -486,6 +495,7 @@ async function renderPage(name){
       </div>
     `;
     document.getElementById('prod-search')?.addEventListener('input',()=>renderProducts(dashboardProducts));
+    document.getElementById('prod-page-size')?.addEventListener('change',()=>{ productsPageState.pageSize=Number(document.getElementById('prod-page-size').value)||20; productsPageState.page=1; loadProducts(productsPageState.page); });
     loadProductsPage();
 } else if(name==='categories'){ return switchPage('products', el); } else if(name==='places'){
     content.innerHTML=`
@@ -526,26 +536,51 @@ async function renderPage(name){
     `;
   } else if(name==='trash'){
     content.innerHTML=`
-      <div class="page-header"><div><h2>Trash</h2><div class="page-sub">Rejected/cancelled orders. Removing from active list preserves permanent financial/statistics history.</div></div><div class="actions-bar"><button class="btn btn-outline" onclick="return switchPage('dashboard', this)">← Back</button><button class="btn btn-danger" onclick="return clearTrash()">Remove All from Active</button></div></div>
+      <div class="page-header"><div><h2>Trash</h2><div class="page-sub">Rejected/cancelled orders. Loaded by page for performance. Removing from active list preserves permanent financial/statistics history.</div></div><div class="actions-bar"><button class="btn btn-outline" onclick="return switchPage('dashboard', this)">← Back</button><button class="btn btn-danger" onclick="return clearTrash()">Remove All from Active</button></div></div>
       <div class="panel">
         <div class="table-wrap" id="trash-table"></div>
-      </div>
-    `;
-    loadTrash();
+        <div id="trash-pager"></div>
+      </div>`;
+    loadTrash(1);
   }
 }
 
 let dashboardProducts=[], dashboardPlaces=[], dashboardOrders=[];
+let ordersPageState={page:1,pageSize:15,total:0,totalPages:1,status:'all',search:'',period:'all'};
+let productsPageState={page:1,pageSize:20,total:0,totalPages:1,search:''};
+let dashboardOrderPageState={page:1,pageSize:10,total:0,totalPages:1};
 
 const ASSIGNABLE_CATEGORIES=[['crunchy-snacks','Crunchy Snacks'],['namkeen-mixtures','Namkeen & Mixtures'],['bhujia-sev','Bhujia & Sev'],['peanut-snacks','Peanut Snacks'],['dal-pulse-snacks','Dal & Pulse Snacks'],['spicy-masala-snacks','Spicy & Masala Snacks']];
 function getCategoryMeta(){ try{return JSON.parse(localStorage.getItem('adminCategoryMeta')||'{}')}catch{return{}} }
 function saveCategoryMeta(v){ localStorage.setItem('adminCategoryMeta', JSON.stringify(v||{})); }
+async function loadOrdersPage(page){
+  const el=document.getElementById('orders-table'); if(!el) return;
+  if(Number.isFinite(Number(page))) ordersPageState.page=Math.max(1,Number(page));
+  el.innerHTML='<div class="empty-state">Loading orders…</div>';
+  try{
+    const q=new URLSearchParams({page:String(ordersPageState.page||1),pageSize:String(ordersPageState.pageSize||15),status:ordersPageState.status||'all'});
+    const res=await adminApi('/api/orders?'+q.toString());
+    dashboardOrders=Array.isArray(res.orders)?res.orders:[];
+    const p=res.pagination||{page:res.page||ordersPageState.page,pageSize:res.pageSize||ordersPageState.pageSize,total:res.total||dashboardOrders.length,totalPages:res.totalPages||1};
+    ordersPageState={...ordersPageState,...p};
+    renderOrders(dashboardOrders);
+    renderPager('orders-pager',ordersPageState,(n)=>loadOrdersPage(n));
+  }catch(e){ el.innerHTML='<div class="empty-state">Unable to load orders. '+escapeHtml(e.message||'')+'</div>'; const p=document.getElementById('orders-pager'); if(p) p.innerHTML=''; }
+}
 async function loadProductsPage(){
   await Promise.all([loadProducts(), loadCategoriesAdmin(true)]);
   populateProductCategorySelect();
 }
-async function loadProducts(){
-  try{const r=await fetch('/api/products',{credentials:'include'});const res=await r.json();dashboardProducts=Array.isArray(res.products)?res.products:[];renderProducts(dashboardProducts); populateProductCategorySelect(); renderCategorySummaryFromProducts();}catch(e){console.error(e);}
+async function loadProducts(page){
+  try{
+    if(Number.isFinite(Number(page))) productsPageState.page=Math.max(1,Number(page));
+    const q=new URLSearchParams({page:String(productsPageState.page||1),pageSize:String(productsPageState.pageSize||20)});
+    const r=await fetch('/api/products?'+q.toString(),{credentials:'include'});const res=await r.json();
+    dashboardProducts=Array.isArray(res.products)?res.products:[];
+    productsPageState={...productsPageState,page:Number(res.page||productsPageState.page||1),pageSize:Number(res.pageSize||productsPageState.pageSize||20),total:Number(res.total||res.pagination?.total||dashboardProducts.length),totalPages:Number(res.totalPages||res.pagination?.totalPages||1)};
+    renderProducts(dashboardProducts); populateProductCategorySelect(); renderCategorySummaryFromProducts();
+    renderPager('products-pager',productsPageState,(n)=>loadProducts(n));
+  }catch(e){console.error(e);}
 }
 function populateProductCategorySelect(){
   const sel=document.getElementById('prod-category-select'); if(!sel) return;
@@ -606,21 +641,36 @@ async function delOrder(id, from='trash'){
     const res = await adminApi(`/api/admin/orders/${encodeURIComponent(id)}`,{method:'DELETE'});
     alert(res.message || 'Order removed from active list. Historical records preserved.');
     const dr = await loadDash(); dashboardOrders = dr.orders||[];
-    if(from==='trash') { await loadTrash(); } else { renderOrders(dashboardOrders); }
+    if(from==='trash') { await loadTrash(trashPageState.page||1); } else if(currentAdminPage==='orders') { await loadOrdersPage(ordersPageState.page||1); } else { renderOrders(dashboardOrders); }
     if(currentAdminPage==='dashboard') await renderPage('dashboard');
   }catch(e){ alert(e.message || 'Failed to delete order.'); }
 }
-async function loadTrash(){
-  try{const r=await fetch('/api/admin/dashboard',{credentials:'include'});const res=await r.json();const all=Array.isArray(res.orders)?res.orders:[];const trash=all.filter(o=>['cancelled','rejected'].includes(String(o.status||'').toLowerCase()));renderTrash(trash);}catch(e){ console.error(e); }
+let trashPageState={page:1,pageSize:20,total:0,totalPages:1};
+async function loadTrash(page){
+  try{
+    if(Number.isFinite(Number(page))) trashPageState.page=Math.max(1,Number(page));
+    const q=new URLSearchParams({status:'trash',page:String(trashPageState.page||1),pageSize:String(trashPageState.pageSize||20)});
+    const res=await adminApi('/api/orders?'+q.toString());
+    const trash=Array.isArray(res.orders)?res.orders:[];
+    trashPageState={...trashPageState,...(res.pagination||{page:res.page||1,pageSize:res.pageSize||20,total:res.total||trash.length,totalPages:res.totalPages||1})};
+    renderTrash(trash);
+    renderPager('trash-pager',trashPageState,(n)=>loadTrash(n));
+  }catch(e){ console.error(e); const el=document.getElementById('trash-table'); if(el) el.innerHTML='<div class="empty-state">Unable to load Trash. '+escapeHtml(e.message||'')+'</div>'; }
 }
 async function clearTrash(){
-  const ids=(Array.isArray(dashboardOrders)?dashboardOrders:[]).filter(o=>['cancelled','rejected','failed','refunded'].includes(String(o.status||'').toLowerCase())).map(o=>o.id);
-  if(!ids.length){ alert('Trash is already empty.'); return; }
-  if(!confirm(`Remove ${ids.length} trashed order(s) from the active list? Historical revenue/statistics will be preserved.`)) return;
-  let ok=0, fail=0;
-  for(const id of ids){ try { await adminApi(`/api/admin/orders/${encodeURIComponent(id)}`,{method:'DELETE'}); ok++; } catch(e){ fail++; } }
-  alert(`Trash active records removed: ${ok}${fail?`, failed: ${fail}`:''}. Historical records preserved.`);
-  const dr=await loadDash(); dashboardOrders=dr.orders||[]; await loadTrash(); renderOrders(dashboardOrders); if(currentAdminPage==='dashboard') await renderPage('dashboard');
+  if(!confirm('Remove trashed/cancelled/rejected orders from the active list (processed in pages)? Historical revenue/statistics will be preserved.')) return;
+  let ok=0, fail=0, total=0, page=1;
+  while(true){
+    const res=await adminApi('/api/orders?status=trash&page='+page+'&pageSize=50');
+    const ids=(Array.isArray(res.orders)?res.orders:[]).map(o=>o.id).filter(Boolean);
+    total = Number(res.total||total||ids.length);
+    if(!ids.length) break;
+    for(const id of ids){ try { await adminApi('/api/admin/orders/'+encodeURIComponent(id),{method:'DELETE'}); ok++; } catch(e){ fail++; } }
+    if(ids.length < 50) break;
+    page++;
+  }
+  alert((total||ok)?('Trash active records removed: '+ok+(fail?(', failed: '+fail):'')+'. Historical records preserved.'):'Trash is already empty.');
+  await loadTrash(1); if(currentAdminPage==='dashboard') await renderPage('dashboard'); if(currentAdminPage==='orders') await loadOrdersPage(1);
 }
 function renderTrash(list){
   const el=document.getElementById('trash-table');
@@ -646,7 +696,7 @@ function renderOrders(list){
   el.innerHTML=`<div class="order-cards">${accepted.map(o=>orderCard(o,'orders-del')).join('')}</div>`;
   el.querySelectorAll('.del-btn').forEach(b=>b.addEventListener('click',async()=>{
     const id=b.dataset.id;if(!confirm('Move this order to Trash?'))return; b.disabled=true;
-    try{ await adminApi(`/api/admin/orders/${encodeURIComponent(id)}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'rejected'})}); alert('Moved to Trash.'); const dr=await loadDash(); dashboardOrders=dr.orders||[]; renderOrders(dashboardOrders); loadTrash(); }catch(e){ alert(e.message); b.disabled=false; }
+    try{ await adminApi(`/api/admin/orders/${encodeURIComponent(id)}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'rejected'})}); alert('Moved to Trash.'); if(currentAdminPage==='orders') await loadOrdersPage(ordersPageState.page||1); else { const dr=await loadDash(); dashboardOrders=dr.orders||[]; renderOrders(dashboardOrders); } }catch(e){ alert(e.message); b.disabled=false; }
   }));
 }
 function orderCard(o,ctx){
