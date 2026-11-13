@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Mahashree Namkeen offers premium namkeen, snack mixes, and savory food products with trusted Nepali taste." />
+    <title>Mahashree Namkeen | Premium Snacks & Spice Mixes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <div class="brand-wrap">
+          <button class="menu-btn" type="button" id="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="site-sidebar">
+            <span></span><span></span><span></span>
+          </button>
+
+          <a class="brand" href="/" aria-label="Mahashree Namkeen home">
+            <img src="https://www.mahaspicesfood.com/assets/images/settings/MJChA_1723197133.png" alt="Mahashree Namkeen logo" class="brand-mark" />
+            <div>
+              <strong>Mahashree</strong>
+              <small>Namkeen</small>
+            </div>
+          </a>
+        </div>
+
+        <div class="search-wrap" role="search">
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <input type="search" placeholder="Search for products or categories..." aria-label="Search products" />
+          <button type="button" class="search-btn">Search</button>
+        </div>
+
+        <div class="nav-actions">
+          <button class="header-chip user-button" id="user-button" type="button" aria-label="User account">
+            <span class="chip-icon" aria-hidden="true">◔</span>
+            <span id="user-label">Login</span>
+          </button>
+          <button class="header-chip" type="button" aria-label="Location">
+            <span class="chip-icon" aria-hidden="true">◉</span>
+            <span>Location</span>
+          </button>
+          <button class="header-chip cart-trigger" type="button" aria-label="Shopping cart">
+            <span class="chip-icon" aria-hidden="true">🛒</span>
+            <span>Cart</span>
+            <span class="cart-pill" id="cart-count">0</span>
+          </button>
+        </div>
+
+
+      </div>
+    </header>
+
+    <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+    <aside class="sidebar" id="site-sidebar" aria-label="Main menu" aria-hidden="true">
+      <div class="sidebar-head">
+        <span class="sidebar-title">Menu</span>
+        <button type="button" class="sidebar-close" id="sidebar-close" aria-label="Close menu">×</button>
+      </div>
+      <nav class="sidebar-nav" aria-label="Navigation menu">
+        <a href="/" class="sidebar-link active" data-page-route="home">Home</a>
+        <a href="/places" class="sidebar-link" data-page-route="places">Places</a>
+        <a href="/about" class="sidebar-link" data-page-route="about">About</a>
+        <a href="/products" class="sidebar-link" data-page-route="products">Products</a>
+        <a href="/price" class="sidebar-link" data-page-route="price">Price</a>
+        <a href="/app" class="sidebar-link" data-page-route="app">App</a>
+        <a href="/user" class="sidebar-link" data-page-route="user">User</a>
+        <a href="/login" class="sidebar-link" data-page-route="login">Login</a>
+      </nav>
+    </aside>
+
+    <main id="top" class="page-main">
+      <section class="hero" data-page-view="home">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">Quality Namkeen & Snacks</p>
+            <h1>हिमाल पहाड तराई कोही छैन पराई — नेपाली मनको नेपाली स्वाद</h1>
+            <p class="lead">
+              Mahashree Namkeen — premium namkeen and snack mixes made with authentic Nepali taste.
+            </p>
+
+            <div class="hero-buttons">
+              <a class="btn btn-primary" href="/products">Browse Products</a>
+              <a class="btn btn-secondary" href="tel:+9779869711440">Call Us</a>
+            </div>
+
+            <ul class="hero-points" aria-label="Key benefits">
+              <li>Fast delivery</li>
+              <li>Fresh items</li>
+              <li>Trusted quality</li>
+            </ul>
+          </div>
+
+          <div class="hero-visual" aria-label="Product showcase">
+          <img src="https://www.mahaspicesfood.com/assets/images/foodimage/1736141864-badam1.png" alt="Mahashree Namkeen" style="max-width:800px;width:100%;height:auto;" />
+          </div>
+        </div>
+      </section>
+
+      <section class="section products home-products" data-page-view="home" id="home-featured-products">
+        <div class="container">
+          <div class="section-head">
+            <p class="section-tag">Shop</p>
+            <h2>Popular picks</h2>
+          </div>
+          <div class="product-grid" id="home-featured-grid"></div>
+        </div>
+      </section>
+
+      <section class="stats-bar" data-page-view="home">
+        <div class="container stats-grid">
+          <div>
+            <strong>2074</strong>
+            <span>Founded</span>
+          </div>
+          <div>
+            <strong>15+</strong>
+            <span>Signature products</span>
+          </div>
+          <div>
+            <strong>100%</strong>
+            <span>Flavor-first recipes</span>
+          </div>
+          <div>
+            <strong>24/7</strong>
+            <span>Customer support</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section login-page" data-page-view="login" hidden>
+        <div class="container">
+          <div class="section-head">
+            <p class="section-tag">Your account</p>
+            <h2>Sign in with email or mobile.</h2>
+            <button type="button" class="btn btn-primary" id="login-page-open">Continue to login</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section category-section" data-page-view="home categories" id="shop-categories">
+        <div class="container">
+          <div class="section-head">
+            <p class="section-tag">Shop by Category</p>
+            <h2>Find your favorite Namkeen & snacks</h2>
+          </div>
+
+          <div class="category-grid" id="home-category-grid" aria-label="Product categories">
+            <button type="button" class="category-card is-clickable" data-category-link="all-products">
+              <span class="category-icon">🛍️</span>
+              <h3>All Products</h3>
+              <small class="category-count" data-category-count="all-products">View all</small>
+            </button>
+            <button type="button" class="category-card is-clickable" data-category-link="crunchy-snacks">
+              <span class="category-icon">🥨</span>
+              <h3>Crunchy Snacks</h3>
+              <small class="category-count" data-category-count="crunchy-snacks">0 products</small>
+            </button>
+            <button type="button" class="category-card is-clickable" data-category-link="namkeen-mixtures">
+              <span class="category-icon">🥣</span>
+              <h3>Namkeen & Mixtures</h3>
+              <small class="category-count" data-category-count="namkeen-mixtures">0 products</small>
+            </button>
+            <button type="button" class="category-card is-clickable" data-category-link="bhujia-sev">
+              <span class="category-icon">🍜</span>
+              <h3>Bhujia & Sev</h3>
+              <small class="category-count" data-category-count="bhujia-sev">0 products</small>
+            </button>
+            <button type="button" class="category-card is-clickable" data-category-link="peanut-snacks">
+              <span class="category-icon">🥜</span>
+              <h3>Peanut Snacks</h3>
+              <small class="category-count" data-category-count="peanut-snacks">0 products</small>
+            </button>
+            <button type="button" class="category-card is-clickable" data-category-link="dal-pulse-snacks">
+              <span class="category-icon">🌾</span>
+              <h3>Dal & Pulse Snacks</h3>
+              <small class="category-count" data-category-count="dal-pulse-snacks">0 products</small>
+            </button>
+            <button type="button" class="category-card is-clickable" data-category-link="spicy-masala-snacks">
+              <span class="category-icon">🌶️</span>
+              <h3>Spicy & Masala Snacks</h3>
+              <small class="category-count" data-category-count="spicy-masala-snacks">0 products</small>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section id="about" class="section about" data-page-view="about" hidden>
+        <div class="container about-grid">
+          <div class="about-image">
+            <img src="/images/about-mahashree-products.png" alt="Maha Shree Namkeen product packets" />
+          </div>
+
+          <div class="about-copy">
+            <p class="section-tag">About us</p>
+            <h2>Quality snacks with a home-grown taste.</h2>
+            <p>
+              Maha Spice and Food Products is basically a FMCG product of snacks and namkeens founded in 2074 by Mr. Madan Raj Neupane. It is a sole proprietorship profit-based industrial firm. Balance of taste is ensured without compromising health with the wide range of varieties provided to our customers. All our products maintain a constant sense of quality and simplicity. The ingredients and recipes we choose extremely carefully to emphasize these fundamentals. Our commitment is to serve the most authentic tastes to the consumer through our quality products.
+            </p>
+            <p>
+              Every recipe is carefully selected and crafted to preserve authentic taste,
+              freshness, and consistency. From crunchy namkeen to rich mixes and savory
+              bites, each product is designed to delight families across Nepal.
+            </p>
+
+            <div class="check-list">
+              <span>✓ Carefully sourced ingredients</span>
+              <span>✓ Taste-focused production</span>
+              <span>✓ Reliable household packaging</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="products" class="section products" data-page-view="products" hidden>
+        <div class="container">
+          <div class="section-head">
+            <p class="section-tag">Shop</p>
+            <h2 id="products-heading">All Products</h2>
+            <p id="products-subheading" class="lead">Browse our complete collection of Namkeen & snacks.</p>
+          </div>
+
+          <div class="shop-controls">
+            <div class="filter-bar" id="products-filter-bar" aria-label="Product categories">
+              <button class="filter-btn active" data-filter="all-products" type="button">All Products</button>
+              <button class="filter-btn" data-filter="crunchy-snacks" type="button">Crunchy Snacks</button>
+              <button class="filter-btn" data-filter="namkeen-mixtures" type="button">Namkeen & Mixtures</button>
+              <button class="filter-btn" data-filter="bhujia-sev" type="button">Bhujia & Sev</button>
+              <button class="filter-btn" data-filter="peanut-snacks" type="button">Peanut Snacks</button>
+              <button class="filter-btn" data-filter="dal-pulse-snacks" type="button">Dal & Pulse Snacks</button>
+              <button class="filter-btn" data-filter="spicy-masala-snacks" type="button">Spicy & Masala Snacks</button>
+            </div>
+            <div class="shop-toolbar">
+              <input id="product-search" type="search" placeholder="Search products in this category…" aria-label="Search products" />
+              <select id="product-sort" aria-label="Sort products">
+                <option value="featured">Sort: Featured</option>
+                <option value="name">Name A–Z</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+              </select>
+              <span id="product-count" class="product-count" aria-live="polite"></span>
+              <button type="button" class="btn btn-secondary" id="clear-category-filter" hidden>All Products</button>
+            </div>
+          </div>
+
+          <div class="product-grid" id="products-grid"></div>
+          <div id="products-empty" class="empty-state" hidden>No products found in this category.</div>
+        </div>
+      </section>
+
+      <section class="section places-page" data-page-view="places" hidden>
+        <div class="container places-grid">
+          <div>
+            <p class="section-tag">Find us</p>
+            <h2>Mahashree Namkeen, Lamki</h2>
+            <p>Kailali, Lamki, Nepal</p>
+            <a class="btn btn-primary" href="https://maps.google.com/?q=28.6208333,81.1409444" target="_blank" rel="noreferrer">Open map</a>
+          </div>
+       <div id="places-list" class="places-grid"></div>
+        </div>
+      </section>
+
+      <section class="section features" data-page-view="home">
+        <div class="container">
+          <div class="section-head center">
+            <p class="section-tag">Why choose us</p>
+            <h2>Trusted ingredients. Honest taste. Consistent quality.</h2>
+          </div>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="icon">🥭</div>
+              <h3>Authentic Recipes</h3>
+              <p>Traditional snack formulas with a modern food safety standard.</p>
+            </div>
+            <div class="feature-card">
+              <div class="icon">🌿</div>
+              <h3>Balanced Nutrition</h3>
+              <p>Recipes are designed to balance rich flavor while keeping food quality in focus.</p>
+            </div>
+            <div class="feature-card">
+              <div class="icon">📦</div>
+              <h3>Premium Packaging</h3>
+              <p>Every product is packed to retain freshness, crunch, and protection from dust.</p>
+            </div>
+            <div class="feature-card">
+              <div class="icon">🚚</div>
+              <h3>Fast Delivery</h3>
+              <p>Quick order handling and dependable support for retailers and families alike.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="testimonials" class="section testimonials" data-page-view="home">
+        <div class="container">
+          <div class="section-head center">
+            <p class="section-tag">Customer says</p>
+            <h2>Families and partners love what we create.</h2>
+          </div>
+
+          <div class="testimonial-slider">
+            <button class="slide-arrow prev" aria-label="Previous testimonial">‹</button>
+
+            <div class="testimonial-track">
+              <article class="testimonial active">
+                <p>
+                  “Loved these snacks. The flavor is excellent and the price is very reasonable.
+                  I can enjoy them anytime of the day.”
+                </p>
+                <div>
+                  <strong>Ramesh</strong>
+                  <span>Butwal</span>
+                </div>
+              </article>
+
+              <article class="testimonial">
+                <p>
+                  “There is a wide variety of products to choose from, and the delivery is fast.
+                  It feels easy to order and enjoy.”
+                </p>
+                <div>
+                  <strong>Prakash</strong>
+                  <span>Pokhara</span>
+                </div>
+              </article>
+
+              <article class="testimonial">
+                <p>
+                  “The product quality, packaging, and service are impressive. It is perfect for
+                  daily snacking and family gatherings.”
+                </p>
+                <div>
+                  <strong>Dhiraj</strong>
+                  <span>Chitwan</span>
+                </div>
+              </article>
+            </div>
+
+            <button class="slide-arrow next" aria-label="Next testimonial">›</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-banner" data-page-view="home">
+        <div class="container cta-inner">
+          <div>
+            <p class="section-tag light">Bring authentic taste home</p>
+            <h2>Ready to order your favorite snack mix?</h2>
+          </div>
+          <div class="cta-actions">
+            <a class="btn btn-primary" href="https://wa.me/9779869711440?text=Hello%20I%20want%20to%20order%20your%20products" target="_blank" rel="noreferrer">Chat on WhatsApp</a>
+            <button class="btn btn-secondary cart-trigger" type="button">Checkout now</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section app-page" data-page-view="app" hidden>
+        <div class="container app-page-inner">
+          <div>
+            <p class="section-tag">Mahashree shopping</p>
+            <h2>Good snacks and groceries, close at hand.</h2>
+            <p>Browse the current selection online or contact our team for help with an order. (Under development)</p>
+            <div class="hero-buttons">
+              <a class="btn btn-primary" href="/products">Browse products</a>
+              <a class="btn btn-secondary" href="tel:+9779869711440">Call us</a>
+            </div>
+          </div>
+          <div class="app-mark" aria-hidden="true">M</div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="cart-panel amz-cart-panel" aria-label="Shopping cart">
+      <div class="cart-header amz-panel-header">
+        <h3>Shopping Cart</h3>
+        <button type="button" class="close-cart" aria-label="Close cart">×</button>
+      </div>
+
+      <div id="cart-items" class="cart-items amz-cart-items">
+        <p class="empty-state">Your cart is empty.</p>
+      </div>
+
+      <div class="cart-summary amz-checkout-box">
+        <div class="amz-checkout-sub">Subtotal (<span id="amz-checkout-count">0 items</span>): <strong id="amz-checkout-subtotal">NPR 0</strong></div>
+        <div class="amz-breakdown">
+          <div class="amz-breakdown-total"><span>Order total</span><strong id="amz-checkout-total">NPR 0</strong></div>
+        </div>
+        <form id="order-form" class="order-form amz-order-form">
+          <input type="text" name="customerName" placeholder="Full name" required />
+          <input type="tel" name="phone" placeholder="Phone number" required />
+          <input type="email" name="email" placeholder="Email address" />
+          <textarea name="address" rows="3" placeholder="Delivery address" required></textarea>
+          <select name="paymentMethod" aria-label="Payment method">
+            <option value="Cash on Delivery">Cash on Delivery</option>
+            <option value="Online Payment">Online Payment</option>
+          </select>
+          <textarea name="note" rows="2" placeholder="Delivery notes (optional)"></textarea>
+          <div class="amz-order-safety">Only selected, in-stock items are checked out. Prices are verified on the server.</div>
+          <button type="submit" class="btn btn-primary full-width amz-proceed">Proceed to Checkout</button>
+        </form>
+        <div class="amz-subtotal-legacy" hidden><strong id="subtotal">NPR 0</strong></div>
+      </div>
+    </aside>
+
+    <div class="cart-overlay"></div>
+
+    <div class="auth-modal" id="auth-modal" aria-hidden="true">
+      <div class="auth-panel" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <button type="button" class="auth-close" aria-label="Close login panel">×</button>
+
+        <div class="auth-tabs" role="tablist" aria-label="Authentication tabs">
+          <button type="button" class="auth-tab active" data-auth-tab="login">Login</button>
+          <button type="button" class="auth-tab" data-auth-tab="register">Register</button>
+        </div>
+
+        <div class="auth-content">
+          <form id="login-form" class="auth-form active" autocomplete="on">
+            <h2 id="auth-title">Welcome back</h2>
+
+            <button type="button" class="btn btn-google" id="google-login-btn">
+              <span class="google-mark">G</span>
+              Continue with Google
+            </button>
+
+            <div class="auth-divider"><span>or continue with email or mobile</span></div>
+
+            <label class="field-label" for="login-identifier">Email or mobile number</label>
+            <input id="login-identifier" type="text" name="identifier" placeholder="Enter email or mobile number" autocomplete="username" required />
+
+            <button type="submit" class="btn btn-primary full-width">Continue</button>
+          </form>
+
+          <form id="register-form" class="auth-form" autocomplete="on">
+            <h2>Create account</h2>
+            <input type="text" name="name" placeholder="Full name" required />
+            <input type="tel" name="mobile" placeholder="Mobile number" required />
+            <input type="email" name="email" placeholder="Email address" />
+            <input type="password" name="password" placeholder="Password" required />
+            <button type="submit" class="btn btn-primary full-width">Register</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <aside class="user-panel" id="user-panel" aria-label="User account details" aria-hidden="true">
+      <div class="user-panel-header">
+        <div>
+          <p class="section-tag user-tag">Account</p>
+          <h3>My account</h3>
+        </div>
+        <button type="button" class="auth-close user-close" id="user-close" aria-label="Close account panel">×</button>
+      </div>
+
+      <div class="user-profile">
+        <div class="user-avatar" id="user-avatar">U</div>
+        <div>
+          <strong id="user-panel-name">Guest</strong>
+          <small id="user-panel-provider">Not signed in</small>
+        </div>
+      </div>
+
+      <div class="user-meta">
+        <div>
+          <span>Mobile</span>
+          <strong id="user-panel-mobile">-</strong>
+        </div>
+        <div>
+          <span>Email</span>
+          <strong id="user-panel-email">-</strong>
+        </div>
+      </div>
+
+      <div class="user-section">
+        <h4>Cart items</h4>
+        <div id="user-cart-items" class="user-items"></div>
+      </div>
+
+      <div class="user-section">
+        <h4>Purchased products</h4>
+        <div id="user-purchase-items" class="user-items"></div>
+      </div>
+
+      <button type="button" class="btn btn-secondary full-width" id="user-logout">Sign out</button>
+    </aside>
+
+    <section id="price-list" class="section price-section" data-page-view="price" hidden>
+      <div class="container">
+        <div class="section-head">
+          <p class="section-tag">Price list</p>
+          <h2>Compare products and find the best value.</h2>
+        </div>
+
+        <div class="price-toolbar">
+          <button type="button" class="price-sort-btn" id="price-sort-btn">Sort: High to low</button>
+        </div>
+
+        <div class="price-list" id="price-list-container" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="user-page" class="section user-page-section" data-page-view="user" hidden>
+      <div class="container user-page-shell">
+        <div class="section-head">
+          <p class="section-tag">User account</p>
+          <h2>Manage your profile, cart, and purchase history.</h2>
+        </div>
+
+        <div class="user-page-card">
+          <div class="user-page-profile">
+            <div class="user-avatar" id="user-page-avatar">U</div>
+            <div>
+              <strong id="user-page-name">Guest</strong>
+              <small id="user-page-provider">Not signed in</small>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary" id="user-page-login">Login or create account</button>
+
+          <div class="user-meta user-page-meta">
+            <div>
+              <span>Mobile</span>
+              <strong id="user-page-mobile">-</strong>
+            </div>
+            <div>
+              <span>Email</span>
+              <strong id="user-page-email">-</strong>
+            </div>
+          </div>
+
+          <div class="user-page-grid">
+            <div class="user-section">
+              <h4>Cart items</h4>
+              <div id="user-page-cart-items" class="user-items">
+                <div class="user-empty">No items in your cart.</div>
+              </div>
+            </div>
+
+            <div class="user-section">
+              <h4>Purchased products</h4>
+              <div id="user-page-purchase-items" class="user-items">
+                <div class="user-empty">No purchased products yet.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer id="contact" class="site-footer">
+      <div class="container footer-grid">
+        <div class="footer-brand-block">
+          <a class="brand footer-brand" href="/">
+            <img src="https://www.mahaspicesfood.com/assets/images/settings/MJChA_1723197133.png" alt="Mahashree Namkeen logo" class="brand-mark" />
+            <div>
+              <strong>Mahashree</strong>
+              <small>Namkeen</small>
+            </div>
+          </a>
+          <p>
+            Premium snacks made with authentic Nepali taste and a focus on freshness,
+            flavor, and customer trust.
+          </p>
+          <div class="social-links">
+            <a href="https://www.facebook.com/mahaspicefoodproduct" target="_blank" rel="noreferrer" aria-label="Facebook">Facebook</a>
+            <a href="https://www.instagram.com/mahaspicefood/" target="_blank" rel="noreferrer" aria-label="Instagram">Instagram</a>
+            <a href="https://wa.me/9779869711440?text=Hello%20I%20need%20support" target="_blank" rel="noreferrer" aria-label="WhatsApp">WhatsApp</a>
+          </div>
+        </div>
+
+        <div class="footer-links-block">
+          <h3>Quick Links</h3>
+          <ul>
+            <li><a href="/categories">Categories</a></li>
+            <li><a href="/places">Places</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/products">Products</a></li>
+            <li><a href="/price">Price</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-app-block">
+          <h3>Quick Contact</h3>
+          <div class="footer-quick-actions">
+            <a href="/products">Shop products</a>
+            <a href="tel:+9779869711440">Call us</a>
+          </div>
+        </div>
+
+        <div class="footer-contact-block">
+          <h3>Contact Us</h3>
+          <ul>
+            <li>Kailali, Lamki</li>
+            <li><a href="tel:+9779869711440">9869711440</a></li>
+            <li><a href="mailto:info@mahaspicesfood.com">info@mahaspicesfood.com</a></li>
+            <li><a href="https://maps.google.com/?q=28.6208333,81.1409444" target="_blank" rel="noreferrer">View location on map</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="bottom-bar">
+        <div class="container bottom-inner">
+          <span>© <span id="year"></span> Mahashree Namkeen</span>
+          <span>Design inspired by trust, taste, and quality.</span>
+        </div>
+      </div>
+    </footer>
+
+    <button class="floating-cart" type="button" aria-label="Cart" onclick="renderCart();document.querySelector('.cart-panel')?.classList.add('open');document.querySelector('.cart-overlay')?.classList.add('visible');">🛒<span class="cart-badge" id="cart-badge">0</span></button>
+    <script src="script.js"></script>
+    <script>
+      (function () {
+        if (window.__mahaAppInitialized) return;
+        const userButton = document.getElementById('user-button');
+        const userPanel = document.getElementById('user-panel');
+        const authModal = document.getElementById('auth-modal');
+
+        const renderFallbackUserPanel = () => {
+          const user = (() => {
+            try {
+              const value = localStorage.getItem('maha-auth');
+              return value ? JSON.parse(value) : null;
+            } catch (error) {
+              return null;
+            }
+          })();
+
+          const nameEl = document.getElementById('user-panel-name');
+          const providerEl = document.getElementById('user-panel-provider');
+          const mobileEl = document.getElementById('user-panel-mobile');
+          const emailEl = document.getElementById('user-panel-email');
+          const avatarEl = document.querySelector('.user-avatar');
+
+          if (user) {
+            const firstLetter = (user.name || user.mobile || 'U').charAt(0).toUpperCase();
+            if (avatarEl) avatarEl.textContent = firstLetter;
+            if (nameEl) nameEl.textContent = user.name || 'User';
+            if (providerEl) providerEl.textContent = user.provider === 'google' ? 'Google account' : 'Local account';
+            if (mobileEl) mobileEl.textContent = user.mobile || '-';
+            if (emailEl) emailEl.textContent = user.email || '-';
+          } else {
+            if (avatarEl) avatarEl.textContent = 'G';
+            if (nameEl) nameEl.textContent = 'Guest';
+            if (providerEl) providerEl.textContent = 'Not signed in';
+            if (mobileEl) mobileEl.textContent = '-';
+            if (emailEl) emailEl.textContent = '-';
+          }
+
+          const cartItemsEl = document.getElementById('user-cart-items');
+          const purchaseItemsEl = document.getElementById('user-purchase-items');
+          try {
+            const cart = JSON.parse(localStorage.getItem('maha-cart') || '[]');
+            if (cartItemsEl) {
+              cartItemsEl.innerHTML = cart.length ? cart.map((item) => `
+                <div class="user-item">
+                  <span>${item.name}</span>
+                  <strong>${item.quantity} × NPR ${item.price}</strong>
+                </div>
+              `).join('') : '<div class="user-empty">No items in your cart.</div>';
+            }
+
+            const history = JSON.parse(localStorage.getItem('maha-purchase-history') || '[]');
+            const purchased = history.flatMap((entry) => Array.isArray(entry.items) ? entry.items : []);
+            if (purchaseItemsEl) {
+              purchaseItemsEl.innerHTML = purchased.length ? purchased.map((item) => `
+                <div class="user-item">
+                  <span>${item.name}</span>
+                  <strong>${item.quantity || 1} × NPR ${item.price}</strong>
+                </div>
+              `).join('') : '<div class="user-empty">No purchased products yet.</div>';
+            }
+          } catch (error) {
+            if (cartItemsEl) cartItemsEl.innerHTML = '<div class="user-empty">No items in your cart.</div>';
+            if (purchaseItemsEl) purchaseItemsEl.innerHTML = '<div class="user-empty">No purchased products yet.</div>';
+          }
+        };
+
+        if (userButton) {
+          userButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            renderFallbackUserPanel();
+
+            if (authModal) {
+              authModal.classList.remove('open');
+              authModal.setAttribute('aria-hidden', 'true');
+            }
+
+            if (userPanel) {
+              userPanel.classList.add('open');
+              userPanel.setAttribute('aria-hidden', 'false');
+            }
+          });
+        }
+
+        if (userPanel) {
+          userPanel.addEventListener('click', (event) => {
+            if (event.target === userPanel) {
+              userPanel.classList.remove('open');
+              userPanel.setAttribute('aria-hidden', 'true');
+            }
+          });
+        }
+      })();
+  </script>
+</body>
+</html>
